@@ -1,0 +1,48 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id        String   @id @default(cuid())
+  email     String   @unique
+  name      String?
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Post {
+  id        String   @id @default(cuid())
+  title     String
+  content   String?
+  published Boolean  @default(false)
+  authorId  String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Comparison {
+  id            String   @id @default(cuid())
+  masterFile    String
+  secondaryFile String
+  totalRows     Int
+  matchedRows   Int
+  unmatchedRows Int
+  masterData    String   // JSON string of master data
+  secondaryData String   // JSON string of secondary data
+  comparisonData String  // JSON string of comparison results
+  masterColumns String?  // JSON array of selected master columns
+  secondaryColumns String? // JSON array of selected secondary columns
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
