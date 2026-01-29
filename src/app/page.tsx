@@ -27,8 +27,6 @@ import {
   AlertTriangle,
   Loader2
 } from 'lucide-react'
-import { io } from 'socket.io-client'
-
 // Types
 interface FilePreview {
   type: 'master' | 'secondary'
@@ -105,7 +103,6 @@ export default function Home() {
     total: number
     message: string
   } | null>(null)
-  const [socket, setSocket] = useState<any>(null)
 
   // History state
   const [history, setHistory] = useState<ComparisonResult[]>([])
@@ -126,56 +123,6 @@ export default function Home() {
     return Object.keys(firstRow.data)
   }
 
-  // Initialize WebSocket connection
-  useEffect(() => {
-    const socketInstance = io('http://localhost:3003', {
-      transports: ['websocket', 'polling'],
-      reconnection: true,
-      reconnectionAttempts: 5,
-      reconnectionDelay: 1000
-    })
-
-    socketInstance.on('connect', () => {
-      console.log('[Frontend] Connected to progress service at http://localhost:3003')
-    })
-
-    socketInstance.on('connect_error', (error) => {
-      console.error('[Frontend] WebSocket connection error:', error)
-    })
-
-    socketInstance.on('job-initialized', (data: any) => {
-      console.log('[Frontend] Job initialized:', data)
-    })
-
-    socketInstance.on('progress', (data: any) => {
-      console.log('[Frontend] Progress update:', data)
-      setProgress({
-        stage: data.stage,
-        current: data.current,
-        total: data.total,
-        message: data.message
-      })
-    })
-
-    socketInstance.on('complete', (data: any) => {
-      console.log('[Frontend] Comparison complete:', data)
-      setProgress(null)
-      setIsComparing(false)
-    })
-
-    socketInstance.on('error', (data: any) => {
-      console.error('[Frontend] Comparison error:', data.error)
-      setProgress(null)
-      setIsComparing(false)
-      alert('Error during comparison: ' + data.error)
-    })
-
-    setSocket(socketInstance)
-
-    return () => {
-      socketInstance.disconnect()
-    }
-  }, [])
 
   // Fetch history on mount
   useEffect(() => {
@@ -306,16 +253,6 @@ export default function Home() {
       return
     }
 
-    // Generate unique job ID for this comparison
-    const jobId = `job-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`
-    console.log('[Frontend] Generated job ID:', jobId)
-
-    // Join job room for progress updates via WebSocket
-    if (socket) {
-      socket.emit('join-job', { jobId })
-      console.log('[Frontend] Joined job room:', jobId)
-    }
-
     setIsComparing(true)
     setProgress({
       stage: 'initializing',
@@ -332,7 +269,6 @@ export default function Home() {
       formData.append('secondaryFile', secondaryFile)
       formData.append('masterColumns', JSON.stringify(selectedMasterColumns))
       formData.append('secondaryColumns', JSON.stringify(selectedSecondaryColumns))
-      formData.append('jobId', jobId)
 
       const response = await fetch('/api/compare', {
         method: 'POST',
@@ -343,6 +279,8 @@ export default function Home() {
         const result = await response.json()
         console.log('[Frontend] Comparison result:', result)
         setComparisonResult(result)
+        setProgress(null)
+        setIsComparing(false)
         await fetchHistory()
       } else {
         const error = await response.json()
