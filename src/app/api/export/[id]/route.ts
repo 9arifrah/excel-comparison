@@ -4,10 +4,10 @@ import * as XLSX from 'xlsx'
 
 export async function GET(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
-    const { id } = params
+    const { id } = await params
 
     // Get comparison
     const comparison = await db.comparison.findUnique({
