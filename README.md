@@ -1,4 +1,4 @@
-# Excel Comparison Pro - Optimized for Large Files
+# Excel Comparison - Optimized for Large Files
 
 A high-performance Excel file comparison tool optimized for processing files with **150,000+ rows**.
 

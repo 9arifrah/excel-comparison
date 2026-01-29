@@ -14,24 +14,25 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Z.ai Code Scaffold - AI-Powered Development",
-  description: "Modern Next.js scaffold optimized for AI-powered development with Z.ai. Built with TypeScript, Tailwind CSS, and shadcn/ui.",
-  keywords: ["Z.ai", "Next.js", "TypeScript", "Tailwind CSS", "shadcn/ui", "AI development", "React"],
-  authors: [{ name: "Z.ai Team" }],
+  title: "Excel Comparison",
+  description: "High-performance Excel file comparison tool optimized for processing files with 150,000+ rows. Compare, analyze, and export results instantly.",
+  keywords: ["Excel", "Comparison", "File Analysis", "Data Processing", "Next.js", "TypeScript", "Big Data"],
+  authors: [{ name: "9arifrah" }],
   icons: {
-    icon: "https://z-cdn.chatglm.cn/z-ai/static/logo.svg",
+    icon: "/logo.svg",
+    apple: "/logo.svg",
   },
   openGraph: {
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
-    url: "https://chat.z.ai",
-    siteName: "Z.ai",
+    title: "Excel Comparison",
+    description: "Compare Excel files with 150,000+ rows instantly. Fast, accurate, and easy-to-use.",
+    url: "https://github.com/9arifrah/excel-comparison",
+    siteName: "Excel Comparison",
     type: "website",
   },
   twitter: {
     card: "summary_large_image",
-    title: "Z.ai Code Scaffold",
-    description: "AI-powered development with modern React stack",
+    title: "Excel Comparison",
+    description: "Compare Excel files with 150,000+ rows instantly.",
   },
 };
 
