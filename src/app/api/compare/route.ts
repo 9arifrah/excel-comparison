@@ -5,7 +5,13 @@ import { compareExcelFiles } from '@/lib/excel-comparison'
 import { v4 as uuidv4 } from 'uuid'
 
 // HTTP client to communicate with comparison progress service
+// Only enabled in development mode
 async function notifyProgressService(action: string, data: any) {
+  // Skip progress service in production
+  if (process.env.NODE_ENV === 'production') {
+    return
+  }
+
   try {
     const response = await fetch('http://localhost:3004', {
       method: 'POST',
