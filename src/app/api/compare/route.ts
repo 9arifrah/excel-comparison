@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { comparisons } from '@/lib/db/schema'
 import { compareExcelFiles } from '@/lib/excel-comparison'
 import { v4 as uuidv4 } from 'uuid'
 
@@ -99,20 +100,18 @@ export async function POST(request: NextRequest) {
     await notifyProgressService('complete-job', { jobId })
 
     // Save comparison to database
-    const comparison = await db.comparison.create({
-      data: {
-        masterFile: masterFile.name,
-        secondaryFile: secondaryFile.name,
-        totalRows: result.totalRows,
-        matchedRows: result.matchedRows,
-        unmatchedRows: result.unmatchedRows,
-        masterData: JSON.stringify(result.masterData),
-        secondaryData: JSON.stringify(result.secondaryData),
-        comparisonData: JSON.stringify(result.comparisonData),
-        masterColumns: JSON.stringify(masterColumns),
-        secondaryColumns: JSON.stringify(secondaryColumns)
-      }
-    })
+    const [comparison] = await db.insert(comparisons).values({
+      masterFile: masterFile.name,
+      secondaryFile: secondaryFile.name,
+      totalRows: result.totalRows,
+      matchedRows: result.matchedRows,
+      unmatchedRows: result.unmatchedRows,
+      masterData: JSON.stringify(result.masterData),
+      secondaryData: JSON.stringify(result.secondaryData),
+      comparisonData: JSON.stringify(result.comparisonData),
+      masterColumns: JSON.stringify(masterColumns),
+      secondaryColumns: JSON.stringify(secondaryColumns)
+    }).returning()
 
     // Return result summary
     return NextResponse.json({
@@ -127,13 +126,6 @@ export async function POST(request: NextRequest) {
     })
   } catch (error) {
     console.error('Error comparing files:', error)
-
-    // Emit error to WebSocket service if job was initialized
-    const io = getIOClient()
-    io.emit('error-job', {
-      jobId: 'unknown',
-      error: (error as Error).message
-    })
 
     return NextResponse.json(
       { error: 'Internal server error: ' + (error as Error).message },

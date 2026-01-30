@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { comparisons } from '@/lib/db/schema'
+import { eq } from 'drizzle-orm'
 
 export async function GET(
   request: NextRequest,
@@ -15,9 +17,13 @@ export async function GET(
     const filter = searchParams.get('filter') || 'all' // all, matched, unmatched
 
     // Get comparison
-    const comparison = await db.comparison.findUnique({
-      where: { id }
-    })
+    const result = await db
+      .select()
+      .from(comparisons)
+      .where(eq(comparisons.id, id))
+      .limit(1)
+
+    const comparison = result[0]
 
     if (!comparison) {
       return NextResponse.json({ error: 'Comparison not found' }, { status: 404 })

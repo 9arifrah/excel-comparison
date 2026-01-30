@@ -1,27 +1,27 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
+import { comparisons } from '@/lib/db/schema'
+import { desc } from 'drizzle-orm'
 
 export async function GET() {
   try {
-    const comparisons = await db.comparison.findMany({
-      orderBy: {
-        createdAt: 'desc'
-      },
-      select: {
-        id: true,
-        masterFile: true,
-        secondaryFile: true,
-        totalRows: true,
-        matchedRows: true,
-        unmatchedRows: true,
-        masterColumns: true,
-        secondaryColumns: true,
-        createdAt: true
-      }
-    })
+    const result = await db
+      .select({
+        id: comparisons.id,
+        masterFile: comparisons.masterFile,
+        secondaryFile: comparisons.secondaryFile,
+        totalRows: comparisons.totalRows,
+        matchedRows: comparisons.matchedRows,
+        unmatchedRows: comparisons.unmatchedRows,
+        masterColumns: comparisons.masterColumns,
+        secondaryColumns: comparisons.secondaryColumns,
+        createdAt: comparisons.createdAt
+      })
+      .from(comparisons)
+      .orderBy(desc(comparisons.createdAt))
 
     // Parse JSON columns
-    const parsedComparisons = comparisons.map(comp => ({
+    const parsedComparisons = result.map(comp => ({
       ...comp,
       masterColumns: comp.masterColumns ? JSON.parse(comp.masterColumns) : [],
       secondaryColumns: comp.secondaryColumns ? JSON.parse(comp.secondaryColumns) : []

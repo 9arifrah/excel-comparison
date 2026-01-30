@@ -1,0 +1,158 @@
+{
+  "id": "6c022357-6878-4aaa-83f6-e987553bc4df",
+  "prevId": "00000000-0000-0000-0000-000000000000",
+  "version": "7",
+  "dialect": "postgresql",
+  "tables": {
+    "public.comparisons": {
+      "name": "comparisons",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "text",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "master_file": {
+          "name": "master_file",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "secondary_file": {
+          "name": "secondary_file",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "total_rows": {
+          "name": "total_rows",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "matched_rows": {
+          "name": "matched_rows",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "unmatched_rows": {
+          "name": "unmatched_rows",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "master_data": {
+          "name": "master_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "secondary_data": {
+          "name": "secondary_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "comparison_data": {
+          "name": "comparison_data",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "master_columns": {
+          "name": "master_columns",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "secondary_columns": {
+          "name": "secondary_columns",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "comparisons_created_at_idx": {
+          "name": "comparisons_created_at_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comparisons_master_file_idx": {
+          "name": "comparisons_master_file_idx",
+          "columns": [
+            {
+              "expression": "master_file",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "comparisons_secondary_file_idx": {
+          "name": "comparisons_secondary_file_idx",
+          "columns": [
+            {
+              "expression": "secondary_file",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": false
+    }
+  },
+  "enums": {},
+  "schemas": {},
+  "sequences": {},
+  "roles": {},
+  "policies": {},
+  "views": {},
+  "_meta": {
+    "columns": {},
+    "schemas": {},
+    "tables": {}
+  }
+}
