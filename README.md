@@ -36,7 +36,7 @@ A high-performance Excel file comparison tool optimized for processing files wit
 ### Tech Stack
 - **Frontend**: Next.js 15, React 19, TypeScript 5
 - **Styling**: Tailwind CSS 4, shadcn/ui components
-- **Database**: Prisma ORM with SQLite
+- **Database**: Drizzle ORM with Supabase PostgreSQL
 - **Excel Processing**: XLSX (SheetJS)
 - **Real-Time**: Socket.IO WebSocket service
 
@@ -55,9 +55,13 @@ src/
 │       └── history/route.ts        # History endpoints
 ├── components/ui/                  # shadcn/ui components
 ├── lib/
-│   ├── db.ts                     # Prisma client
+│   ├── db/                       # Drizzle ORM configuration
+│   │   ├── index.ts              # Database client
+│   │   └── schema.ts             # Database schema
 │   ├── utils.ts                  # Utility functions
 │   └── excel-comparison.ts        # Optimized comparison logic
+├── drizzle/                      # Drizzle migrations
+│   └── 0000_*.sql               # Database migrations
 └── hooks/                        # Custom React hooks
 
 mini-services/
@@ -127,9 +131,11 @@ bun install
 
 2. **Set up database**:
 ```bash
+# Create database table
+node scripts/create-table.js
+
+# Or use Drizzle (requires psql installed)
 npm run db:push
-# or with bun
-bun run db:push
 ```
 
 ### Development
@@ -176,10 +182,10 @@ Navigate to [http://localhost:3000](http://localhost:3000) after starting the de
 | `npm run build` | Build for production |
 | `npm run start` | Start production server |
 | `npm run lint` | Run ESLint |
-| `npm run db:push` | Push database schema |
-| `npm run db:generate` | Generate Prisma client |
+| `npm run db:generate` | Generate Drizzle migration |
+| `npm run db:push` | Push schema to database |
 | `npm run db:migrate` | Run database migrations |
-| `npm run db:reset` | Reset database |
+| `npm run db:studio` | Open Drizzle Studio |
 
 ## 💡 Usage
 
@@ -375,9 +381,10 @@ DELETE /api/history/[id]
 ## 🔒 Security
 
 - File type validation (.xlsx, .xls only)
-- Prisma ORM prevents SQL injection
+- Drizzle ORM prevents SQL injection with parameterized queries
 - Input validation on all endpoints
 - No sensitive data stored
+- Environment variables for database credentials
 - Local processing only (no external APIs)
 
 ## 🚧 Development
