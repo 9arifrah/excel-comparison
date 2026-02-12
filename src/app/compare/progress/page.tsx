@@ -19,8 +19,19 @@ function ProgressScreen() {
     message: 'Initializing comparison...'
   })
 
+  // Validate comparison ID on mount
+  useEffect(() => {
+    const id = searchParams.get('id')
+    if (!id) {
+      router.push('/')
+    }
+  }, [router, searchParams])
+
   // Simulate comparison progress
   useEffect(() => {
+    const id = searchParams.get('id')
+    if (!id) return
+
     let mounted = true
     let current = 0
 
@@ -44,8 +55,7 @@ function ProgressScreen() {
         // Redirect to results after a short delay
         setTimeout(() => {
           if (mounted) {
-            const comparisonId = searchParams.get('id') || 'sample'
-            router.push(`/compare/results?id=${comparisonId}`)
+            router.push(`/compare/results?id=${id}`)
           }
         }, 1000)
         return

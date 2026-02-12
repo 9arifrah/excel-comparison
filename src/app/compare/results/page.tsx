@@ -23,7 +23,8 @@ import {
   ChevronLeft,
   ChevronRight,
   ChevronLeft as ChevronsLeft,
-  ChevronRight as ChevronsRight
+  ChevronRight as ChevronsRight,
+  Home
 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { PAGE_THEMES, BUTTON_GRADIENTS, BACKGROUNDS, BORDERS, SPACING, SHADOWS, TYPOGRAPHY, COLORS, RADIUS } from '@/lib/constants/design-system'
@@ -43,9 +44,22 @@ function ResultsScreen() {
   useEffect(() => {
     const fetchComparison = async () => {
       try {
-        const id = searchParams.get('id') || 'sample'
+        const id = searchParams.get('id')
+        
+        // If no ID provided, redirect to home
+        if (!id) {
+          router.push('/')
+          return
+        }
+
         // Fetch without server-side pagination to do client-side filtering
         const response = await fetch(`/api/comparison/${id}?page=1&limit=10000&filter=all`)
+        
+        if (response.status === 404) {
+          setComparisonResult(null)
+          setComparisonData([])
+          return
+        }
         
         if (!response.ok) {
           throw new Error('Failed to fetch comparison')
@@ -65,7 +79,7 @@ function ResultsScreen() {
     }
     
     fetchComparison()
-  }, [searchParams])
+  }, [searchParams, router])
 
   // Reset to page 1 when search query or filter changes
   useEffect(() => {
@@ -73,7 +87,7 @@ function ResultsScreen() {
   }, [searchQuery, filterStatus])
 
   // Show loading state while fetching data
-  if (isLoading || !comparisonResult) {
+  if (isLoading) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950">
         <div className="container mx-auto px-4 py-12 max-w-7xl">
@@ -84,6 +98,65 @@ function ResultsScreen() {
               </Card>
             ))}
           </div>
+        </div>
+      </div>
+    )
+  }
+
+  // Show error state if no comparison found
+  if (!comparisonResult) {
+    return (
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950">
+        <div className="container mx-auto px-4 py-12 max-w-7xl">
+          <PageHeader
+            title="No Comparison Found"
+            subtitle="The comparison you're looking for doesn't exist or has been deleted"
+            icon={<XCircle className="w-5 h-5 text-red-600 dark:text-red-400" />}
+            themeGradient={PAGE_THEMES.results}
+            showBackButton={false}
+          />
+          <Card className="border-0 bg-gradient-to-br from-red-500/10 to-orange-500/10 dark:from-red-500/20 dark:to-orange-500/20 backdrop-blur-sm shadow-2xl">
+            <CardContent className="p-12 space-y-6">
+              <div className="flex flex-col items-center gap-6">
+                <div className="w-20 h-20 rounded-full bg-red-500/10 dark:bg-red-500/20 flex items-center justify-center">
+                  <XCircle className="w-10 h-10 text-red-600 dark:text-red-400" />
+                </div>
+                <div className="text-center space-y-3">
+                  <h2 className="text-2xl font-bold text-slate-900 dark:text-slate-100">
+                    Comparison Not Found
+                  </h2>
+                  <p className="text-base text-slate-600 dark:text-slate-400 max-w-md">
+                    The comparison you're looking for doesn't exist, has been deleted, or the ID is invalid. Please start a new comparison or check your history.
+                  </p>
+                </div>
+                <div className="flex flex-col sm:flex-row gap-4 w-full max-w-2xl">
+                  <Button
+                    onClick={() => router.push('/')}
+                    className="flex-1 px-8 py-6 bg-gradient-to-r from-green-600 to-emerald-600 hover:from-green-700 hover:to-emerald-700 shadow-lg hover:shadow-xl transition-all duration-300"
+                  >
+                    <Plus className="w-5 h-5 mr-2" />
+                    Start New Comparison
+                  </Button>
+                  <Button
+                    onClick={() => router.push('/history')}
+                    variant="outline"
+                    className="flex-1 px-8 py-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-2 border-slate-300 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <History className="w-5 h-5 mr-2" />
+                    View History
+                  </Button>
+                  <Button
+                    onClick={() => router.push('/')}
+                    variant="outline"
+                    className="flex-1 px-8 py-6 bg-white/50 dark:bg-slate-800/50 backdrop-blur-sm border-2 border-slate-300 dark:border-slate-600 hover:border-blue-400 dark:hover:border-blue-500 hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-all duration-200 shadow-sm hover:shadow-md"
+                  >
+                    <Home className="w-5 h-5 mr-2" />
+                    Go Home
+                  </Button>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
         </div>
       </div>
     )
