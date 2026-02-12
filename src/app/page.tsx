@@ -48,7 +48,7 @@ export default function Home() {
           {/* New Comparison Card */}
           <Card 
             className="border-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 backdrop-blur-sm shadow-2xl hover:shadow-3xl hover:scale-105 transition-all duration-300 cursor-pointer"
-            onClick={() => router.push('/compare/upload')}
+            onClick={() => router.push('/compare/new')}
           >
             <CardHeader>
               <CardTitle className="flex items-center gap-3">

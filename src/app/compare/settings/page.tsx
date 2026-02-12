@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -8,7 +8,7 @@ import { Switch } from '@/components/ui/switch'
 import { Input } from '@/components/ui/input'
 import { Progress } from '@/components/ui/progress'
 import { PageHeader } from '@/components/page-layout/PageHeader'
-import { ArrowRight, Settings, Sliders, ArrowLeft } from 'lucide-react'
+import { ArrowRight, Settings, Sliders, ArrowLeft, AlertCircle, Loader2 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { PAGE_THEMES, BUTTON_GRADIENTS, BACKGROUNDS, BORDERS, SPACING, SHADOWS, TYPOGRAPHY, COLORS, RADIUS } from '@/lib/constants/design-system'
 
@@ -19,6 +19,53 @@ export default function SettingsScreen() {
   const [enableFuzzyMatching, setEnableFuzzyMatching] = useState(false)
   const [similarityThreshold, setSimilarityThreshold] = useState(85)
   const [thresholdPreset, setThresholdPreset] = useState<ThresholdPreset>('high')
+  const [isComparing, setIsComparing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
+  const [hasData, setHasData] = useState(false)
+
+  // Check if we have data from upload page
+  useEffect(() => {
+    const uploadData = localStorage.getItem('comparisonData')
+    if (!uploadData) {
+      // Redirect to upload if no data
+      router.push('/compare/upload')
+    } else {
+      setHasData(true)
+    }
+  }, [router])
+
+  const handleCompare = async () => {
+    setError(null)
+    setIsComparing(true)
+
+    try {
+      // Get data from localStorage
+      const uploadDataStr = localStorage.getItem('comparisonData')
+      if (!uploadDataStr) {
+        setError('No data found. Please upload files first.')
+        setIsComparing(false)
+        return
+      }
+
+      const uploadData = JSON.parse(uploadDataStr)
+
+      // Create FormData
+      const formData = new FormData()
+      
+      // Note: We need to pass the actual file data, but localStorage can't store Files
+      // For now, we'll redirect to progress and let the user know this needs to be fixed
+      // This is a known limitation that will be addressed by restructuring the flow
+      
+      // As a temporary workaround, alert the user
+      alert('File data cannot be passed between pages. Please restructure the flow to use a server-side approach or pass file data differently.')
+      
+      setIsComparing(false)
+    } catch (err) {
+      console.error('Error starting comparison:', err)
+      setError('Failed to start comparison. Please try again.')
+      setIsComparing(false)
+    }
+  }
 
   const handleThresholdPresetChange = (preset: ThresholdPreset) => {
     setThresholdPreset(preset)
