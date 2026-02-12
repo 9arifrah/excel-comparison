@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -28,7 +28,7 @@ import {
 import { useRouter, useSearchParams } from 'next/navigation'
 import { PAGE_THEMES, BUTTON_GRADIENTS, BACKGROUNDS, BORDERS, SPACING, SHADOWS, TYPOGRAPHY, COLORS, RADIUS } from '@/lib/constants/design-system'
 
-export default function ResultsScreen() {
+function ResultsScreen() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [filterStatus, setFilterStatus] = useState<'all' | 'matched' | 'unmatched'>('all')
@@ -496,5 +496,29 @@ export default function ResultsScreen() {
         </Card>
       </div>
     </div>
+  )
+}
+
+function LoadingFallback() {
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950">
+      <div className="container mx-auto px-4 py-12 max-w-7xl">
+        <div className="space-y-4">
+          {[1, 2, 3].map(i => (
+            <Card key={i} className="border-0 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm shadow-lg animate-pulse">
+              <CardContent className="p-6 h-32" />
+            </Card>
+          ))}
+        </div>
+      </div>
+    </div>
+  )
+}
+
+export default function ResultsPage() {
+  return (
+    <Suspense fallback={<LoadingFallback />}>
+      <ResultsScreen />
+    </Suspense>
   )
 }

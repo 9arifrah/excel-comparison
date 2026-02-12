@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, Suspense } from 'react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Progress } from '@/components/ui/progress'
@@ -9,7 +9,7 @@ import { ArrowLeft, Loader2, Zap, X } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { PAGE_THEMES, BUTTON_GRADIENTS, BACKGROUNDS, BORDERS, SPACING, SHADOWS, TYPOGRAPHY, COLORS, RADIUS } from '@/lib/constants/design-system'
 
-export default function ProgressScreen() {
+function ProgressScreen() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [progress, setProgress] = useState({
@@ -232,5 +232,23 @@ export default function ProgressScreen() {
         </Card>
       </div>
     </div>
+  )
+}
+
+export default function ProgressPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950">
+        <div className="container mx-auto px-4 py-12 max-w-7xl">
+          <Card className="border-0 bg-gradient-to-br from-blue-500/10 to-purple-500/10 dark:from-blue-500/20 dark:to-purple-500/20 backdrop-blur-sm shadow-2xl">
+            <CardContent className="p-12 flex items-center justify-center">
+              <Loader2 className="w-12 h-12 text-blue-600 dark:text-blue-400 animate-spin" />
+            </CardContent>
+          </Card>
+        </div>
+      </div>
+    }>
+      <ProgressScreen />
+    </Suspense>
   )
 }
