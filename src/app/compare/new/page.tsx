@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useRef } from 'react'
+import * as XLSX from 'xlsx'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
@@ -45,26 +46,63 @@ export default function NewComparisonScreen() {
     const file = event.target.files?.[0]
     if (!file) return
 
-    if (type === 'master') {
-      setMasterFile(file)
-      setIsAnalyzing(prev => ({ ...prev, master: true }))
-      setSelectedMasterColumns([])
-      setMasterPreview({
-        fileName: file.name,
-        totalRows: 1250,
-        columns: ['Name', 'Email', 'Phone', 'Address', 'City']
-      })
-      setTimeout(() => setIsAnalyzing(prev => ({ ...prev, master: false })), 500)
-    } else {
-      setSecondaryFile(file)
-      setIsAnalyzing(prev => ({ ...prev, secondary: true }))
-      setSelectedSecondaryColumns([])
-      setSecondaryPreview({
-        fileName: file.name,
-        totalRows: 1180,
-        columns: ['Name', 'Email', 'Phone', 'Address', 'City']
-      })
-      setTimeout(() => setIsAnalyzing(prev => ({ ...prev, secondary: false })), 500)
+    try {
+      if (type === 'master') {
+        setMasterFile(file)
+        setIsAnalyzing(prev => ({ ...prev, master: true }))
+        setSelectedMasterColumns([])
+        
+        // Read Excel file
+        const data = await file.arrayBuffer()
+        const workbook = XLSX.read(data, { type: 'array' })
+        const firstSheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[firstSheetName]
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+        
+        // Get columns from first row (header)
+        const columns = Array.isArray(jsonData[0]) ? jsonData[0] as string[] : []
+        const totalRows = jsonData.length - 1 // Exclude header row
+        
+        setMasterPreview({
+          fileName: file.name,
+          totalRows: totalRows,
+          columns: columns
+        })
+        setIsAnalyzing(prev => ({ ...prev, master: false }))
+      } else {
+        setSecondaryFile(file)
+        setIsAnalyzing(prev => ({ ...prev, secondary: true }))
+        setSelectedSecondaryColumns([])
+        
+        // Read Excel file
+        const data = await file.arrayBuffer()
+        const workbook = XLSX.read(data, { type: 'array' })
+        const firstSheetName = workbook.SheetNames[0]
+        const worksheet = workbook.Sheets[firstSheetName]
+        const jsonData = XLSX.utils.sheet_to_json(worksheet, { header: 1 })
+        
+        // Get columns from first row (header)
+        const columns = Array.isArray(jsonData[0]) ? jsonData[0] as string[] : []
+        const totalRows = jsonData.length - 1 // Exclude header row
+        
+        setSecondaryPreview({
+          fileName: file.name,
+          totalRows: totalRows,
+          columns: columns
+        })
+        setIsAnalyzing(prev => ({ ...prev, secondary: false }))
+      }
+    } catch (error) {
+      console.error('Error reading Excel file:', error)
+      setError(`Failed to read Excel file: ${(error as Error).message}`)
+      setIsAnalyzing({ master: false, secondary: false })
+      if (type === 'master') {
+        setMasterFile(null)
+        setMasterPreview(null)
+      } else {
+        setSecondaryFile(null)
+        setSecondaryPreview(null)
+      }
     }
   }
 
