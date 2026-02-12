@@ -12,12 +12,15 @@ export const comparisons = pgTable('comparisons', {
   comparisonData: text('comparison_data').notNull(),
   masterColumns: text('master_columns'),
   secondaryColumns: text('secondary_columns'),
+  comparisonMethod: text('comparison_method').notNull().default('exact'), // 'exact' or 'fuzzy'
+  similarityThreshold: integer('similarity_threshold'), // Only for fuzzy matching (0-100)
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
   createdAtIndex: index('comparisons_created_at_idx').on(table.createdAt),
   masterFileIndex: index('comparisons_master_file_idx').on(table.masterFile),
   secondaryFileIndex: index('comparisons_secondary_file_idx').on(table.secondaryFile),
+  comparisonMethodIndex: index('comparisons_comparison_method_idx').on(table.comparisonMethod),
 }))
 
 export type Comparison = typeof comparisons.$inferSelect

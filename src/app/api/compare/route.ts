@@ -37,6 +37,8 @@ export async function POST(request: NextRequest) {
     const masterColumnsStr = formData.get('masterColumns') as string
     const secondaryColumnsStr = formData.get('secondaryColumns') as string
     const jobIdStr = formData.get('jobId') as string | null
+    const enableFuzzyMatchingStr = formData.get('enableFuzzyMatching') as string | null
+    const similarityThresholdStr = formData.get('similarityThreshold') as string | null
 
     // Validate files
     if (!masterFile || !secondaryFile) {
@@ -71,6 +73,18 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Parse fuzzy matching parameters
+    const enableFuzzyMatching = enableFuzzyMatchingStr === 'true'
+    const similarityThreshold = similarityThresholdStr ? parseInt(similarityThresholdStr, 10) : 85
+
+    // Validate similarity threshold if fuzzy matching is enabled
+    if (enableFuzzyMatching && (similarityThreshold < 0 || similarityThreshold > 100)) {
+      return NextResponse.json(
+        { error: 'Similarity threshold must be between 0 and 100' },
+        { status: 400 }
+      )
+    }
+
     // Use job ID from frontend or generate new one
     const jobId = jobIdStr || uuidv4()
     console.log('[Compare API] Job ID:', jobId)
@@ -87,6 +101,8 @@ export async function POST(request: NextRequest) {
     const result = await compareExcelFiles(masterBuffer, secondaryBuffer, {
       masterColumns,
       secondaryColumns,
+      enableFuzzyMatching,
+      similarityThreshold,
       caseSensitive: false,
       trimWhitespace: true,
       onProgress: (progress) => {
@@ -116,7 +132,9 @@ export async function POST(request: NextRequest) {
       secondaryData: JSON.stringify(result.secondaryData),
       comparisonData: JSON.stringify(result.comparisonData),
       masterColumns: JSON.stringify(masterColumns),
-      secondaryColumns: JSON.stringify(secondaryColumns)
+      secondaryColumns: JSON.stringify(secondaryColumns),
+      comparisonMethod: result.comparisonMethod,
+      similarityThreshold: result.similarityThreshold
     }).returning()
 
     // Return result summary
@@ -128,7 +146,9 @@ export async function POST(request: NextRequest) {
       secondaryColumns,
       totalRows: result.totalRows,
       matchedRows: result.matchedRows,
-      unmatchedRows: result.unmatchedRows
+      unmatchedRows: result.unmatchedRows,
+      comparisonMethod: result.comparisonMethod,
+      similarityThreshold: result.similarityThreshold
     })
   } catch (error) {
     console.error('Error comparing files:', error)
