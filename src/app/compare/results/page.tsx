@@ -24,7 +24,8 @@ import {
   ChevronRight,
   ChevronLeft as ChevronsLeft,
   ChevronRight as ChevronsRight,
-  Home
+  Home,
+  Loader2
 } from 'lucide-react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { PAGE_THEMES, BUTTON_GRADIENTS, BACKGROUNDS, BORDERS, SPACING, SHADOWS, TYPOGRAPHY, COLORS, RADIUS } from '@/lib/constants/design-system'
@@ -91,12 +92,19 @@ function ResultsScreen() {
     return (
       <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950">
         <div className="container mx-auto px-4 py-12 max-w-7xl">
-          <div className="space-y-4">
-            {[1, 2, 3].map(i => (
-              <Card key={i} className="border-0 bg-white/60 dark:bg-slate-800/60 backdrop-blur-sm shadow-lg animate-pulse">
-                <CardContent className="p-6 h-32" />
-              </Card>
-            ))}
+          <div className="flex flex-col items-center justify-center min-h-[60vh]">
+            <div className="relative">
+              <div className="absolute inset-0 bg-blue-500/20 blur-2xl rounded-full animate-pulse" />
+              <Loader2 className="w-16 h-16 text-blue-600 dark:text-blue-400 animate-spin relative z-10" />
+            </div>
+            <div className="mt-8 space-y-2 text-center">
+              <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                Loading Comparison Results
+              </h2>
+              <p className="text-base text-slate-600 dark:text-slate-400">
+                Fetching your comparison data from the server...
+              </p>
+            </div>
           </div>
         </div>
       </div>
