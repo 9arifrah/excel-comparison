@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-16
 **Author:** Claude
-**Status:** Design Approved
+**Status:** Revised - Round 2
 
 ## Overview
 
@@ -38,7 +38,8 @@ Add Jaccard Similarity algorithm as a new fuzzy matching option alongside the ex
 | **Basis** | Character-based | Word/set-based |
 | **Best For** | Names, typos, transpositions | Phrases, word order variations |
 | **Example** | "Smith" vs "Smtih" = High | "John Smith" vs "Smith John" = Perfect |
-| **Complexity** | O(n²) where n = string length | O(n + m) where n,m = word counts |
+| **Complexity** | O(n²) where n = string length | O(n + m + w) where n,m = word counts, w = total words |
+| **Empty Behavior** | Returns 0 (no match) | Returns 0 (no meaningful content to compare) |
 
 ## Architecture
 
@@ -86,6 +87,26 @@ export function calculateAverageSimilarity(
   }
 
   return (totalSimilarity / values1.length) * 100
+}
+```
+
+**Also Updated Function:**
+```typescript
+export function calculateFieldSimilarities(
+  values1: string[],
+  values2: string[],
+  algorithm: 'jaro-winkler' | 'jaccard' = 'jaro-winkler'
+): number[] {
+  if (values1.length !== values2.length) {
+    throw new Error('Value arrays must have the same length')
+  }
+
+  return values1.map((value, index) =>
+    (algorithm === 'jaccard'
+      ? jaccardSimilarity(value, values2[index])
+      : jaroWinklerSimilarity(value, values2[index])
+    ) * 100
+  )
 }
 ```
 
@@ -154,6 +175,13 @@ export async function compareExcelFiles(
       secondaryValues,
       fuzzyAlgorithm  // Pass algorithm selection
     )
+
+    // Calculate per-field similarities with algorithm selection
+    const columnSimilarities = calculateFieldSimilarities(
+      masterValues,
+      secondaryValues,
+      fuzzyAlgorithm  // Pass algorithm selection
+    )
   }
 
   // ... rest of comparison logic
@@ -178,6 +206,12 @@ CHECK (fuzzy_algorithm IN ('jaro-winkler', 'jaccard'));
 
 COMMENT ON COLUMN comparisons.fuzzy_algorithm IS
 'Fuzzy matching algorithm used: jaro-winkler or jaccard';
+```
+
+**Rollback Migration:**
+```sql
+-- Rollback: Remove fuzzy_algorithm column
+ALTER TABLE comparisons DROP COLUMN IF EXISTS fuzzy_algorithm;
 ```
 
 #### Drizzle Schema (`src/lib/db/schema.ts`)
@@ -320,7 +354,20 @@ export async function POST(request: NextRequest) {
       fuzzyAlgorithm
     })
 
-    // ... rest of implementation
+    // Return result with fuzzyAlgorithm included
+    return NextResponse.json({
+      id: comparison.id,
+      masterFile: masterFile.name,
+      secondaryFile: secondaryFile.name,
+      masterColumns,
+      secondaryColumns,
+      totalRows: result.totalRows,
+      matchedRows: result.matchedRows,
+      unmatchedRows: result.unmatchedRows,
+      comparisonMethod: result.comparisonMethod,
+      fuzzyAlgorithm: result.fuzzyAlgorithm,  // NEW
+      similarityThreshold: result.similarityThreshold
+    })
   } catch (error) {
     // ... error handling
   }
@@ -331,7 +378,7 @@ export async function POST(request: NextRequest) {
 
 **Edge Cases:**
 
-1. **Empty strings:** Return 0 similarity
+1. **Empty strings:** Return 0 similarity (intentional - empty strings have no meaningful content for fuzzy matching)
 2. **Exact matches:** Return 1.0 similarity
 3. **Special characters/Unicode:** Normalize strings before comparison
 4. **Multiple spaces/whitespace:** Trim and normalize
