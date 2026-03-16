@@ -198,15 +198,13 @@ export default function SettingsScreen() {
                 {/* Preset Buttons */}
                 <div className="space-y-2 mb-6">
                   <Label className="text-base font-semibold text-slate-700 dark:text-slate-300">Quick Presets</Label>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                     <Button
                       onClick={() => handleThresholdPresetChange('strict')}
                       variant={thresholdPreset === 'strict' ? 'default' : 'outline'}
-                      size="lg"
-                      className={thresholdPreset === 'strict'
-                        ? 'bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 shadow-md border-0 py-6'
-                        : 'border-slate-300 dark:border-slate-600 py-6'
-                      }
+                      className={`${thresholdPreset === 'strict'
+                        ? 'bg-gradient-to-r from-red-500 to-orange-500 hover:from-red-600 hover:to-orange-600 shadow-md border-0'
+                        : 'border-slate-300 dark:border-slate-600'} py-4 h-auto min-h-14`}
                     >
                       <div className="flex flex-col items-center gap-1">
                         <span className="font-bold">Strict</span>
@@ -216,11 +214,9 @@ export default function SettingsScreen() {
                     <Button
                       onClick={() => handleThresholdPresetChange('high')}
                       variant={thresholdPreset === 'high' ? 'default' : 'outline'}
-                      size="lg"
-                      className={thresholdPreset === 'high'
-                        ? 'bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 shadow-md border-0 py-6'
-                        : 'border-slate-300 dark:border-slate-600 py-6'
-                      }
+                      className={`${thresholdPreset === 'high'
+                        ? 'bg-gradient-to-r from-orange-500 to-yellow-500 hover:from-orange-600 hover:to-yellow-600 shadow-md border-0'
+                        : 'border-slate-300 dark:border-slate-600'} py-4 h-auto min-h-14`}
                     >
                       <div className="flex flex-col items-center gap-1">
                         <span className="font-bold">High</span>
@@ -230,11 +226,9 @@ export default function SettingsScreen() {
                     <Button
                       onClick={() => handleThresholdPresetChange('medium')}
                       variant={thresholdPreset === 'medium' ? 'default' : 'outline'}
-                      size="lg"
-                      className={thresholdPreset === 'medium'
-                        ? 'bg-gradient-to-r from-yellow-500 to-green-500 hover:from-yellow-600 hover:to-green-600 shadow-md border-0 py-6'
-                        : 'border-slate-300 dark:border-slate-600 py-6'
-                      }
+                      className={`${thresholdPreset === 'medium'
+                        ? 'bg-gradient-to-r from-yellow-500 to-green-500 hover:from-yellow-600 hover:to-green-600 shadow-md border-0'
+                        : 'border-slate-300 dark:border-slate-600'} py-4 h-auto min-h-14`}
                     >
                       <div className="flex flex-col items-center gap-1">
                         <span className="font-bold">Medium</span>
@@ -244,11 +238,9 @@ export default function SettingsScreen() {
                     <Button
                       onClick={() => handleThresholdPresetChange('low')}
                       variant={thresholdPreset === 'low' ? 'default' : 'outline'}
-                      size="lg"
-                      className={thresholdPreset === 'low'
-                        ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 shadow-md border-0 py-6'
-                        : 'border-slate-300 dark:border-slate-600 py-6'
-                      }
+                      className={`${thresholdPreset === 'low'
+                        ? 'bg-gradient-to-r from-green-500 to-blue-500 hover:from-green-600 hover:to-blue-600 shadow-md border-0'
+                        : 'border-slate-300 dark:border-slate-600'} py-4 h-auto min-h-14`}
                     >
                       <div className="flex flex-col items-center gap-1">
                         <span className="font-bold">Low</span>
