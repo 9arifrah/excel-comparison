@@ -26,6 +26,7 @@ export default function NewComparisonScreen() {
   const [selectedMasterColumns, setSelectedMasterColumns] = useState<string[]>([])
   const [selectedSecondaryColumns, setSelectedSecondaryColumns] = useState<string[]>([])
   const [enableFuzzyMatching, setEnableFuzzyMatching] = useState(false)
+  const [fuzzyAlgorithm, setFuzzyAlgorithm] = useState<'jaro-winkler' | 'jaccard'>('jaro-winkler')
   const [similarityThreshold, setSimilarityThreshold] = useState(85)
   const [thresholdPreset, setThresholdPreset] = useState<ThresholdPreset>('high')
   const [isComparing, setIsComparing] = useState(false)
@@ -158,6 +159,7 @@ export default function NewComparisonScreen() {
       formData.append('masterColumns', JSON.stringify(selectedMasterColumns))
       formData.append('secondaryColumns', JSON.stringify(selectedSecondaryColumns))
       formData.append('enableFuzzyMatching', String(enableFuzzyMatching))
+      formData.append('fuzzyAlgorithm', fuzzyAlgorithm)
       formData.append('similarityThreshold', String(similarityThreshold))
 
       // Call API
@@ -475,6 +477,61 @@ export default function NewComparisonScreen() {
                   value={similarityThreshold}
                   className="h-4"
                 />
+
+                {/* Fuzzy Algorithm Selection */}
+                <div className="space-y-4 p-6 bg-white/50 dark:bg-slate-800/50 rounded-xl border-2 border-purple-200/50 dark:border-purple-700/50">
+                  <Label className="text-lg font-bold flex items-center gap-2">
+                    <Settings className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+                    Fuzzy Matching Algorithm
+                  </Label>
+
+                  {/* Radio Buttons */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    {/* Jaro-Winkler Option */}
+                    <button
+                      onClick={() => setFuzzyAlgorithm('jaro-winkler')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        fuzzyAlgorithm === 'jaro-winkler'
+                          ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          fuzzyAlgorithm === 'jaro-winkler' ? 'border-purple-500' : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                          {fuzzyAlgorithm === 'jaro-winkler' && <div className="w-3 h-3 rounded-full bg-purple-500" />}
+                        </div>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">Jaro-Winkler</span>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 pl-8">
+                        Character-based (Best for names/typos)
+                      </p>
+                    </button>
+
+                    {/* Jaccard Option */}
+                    <button
+                      onClick={() => setFuzzyAlgorithm('jaccard')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        fuzzyAlgorithm === 'jaccard'
+                          ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20'
+                          : 'border-slate-200 dark:border-slate-700 hover:border-purple-300 dark:hover:border-purple-600'
+                      }`}
+                    >
+                      <div className="flex items-center gap-3 mb-2">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center ${
+                          fuzzyAlgorithm === 'jaccard' ? 'border-purple-500' : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                          {fuzzyAlgorithm === 'jaccard' && <div className="w-3 h-3 rounded-full bg-purple-500" />}
+                        </div>
+                        <span className="font-bold text-slate-700 dark:text-slate-300">Jaccard Similarity</span>
+                      </div>
+                      <p className="text-sm text-slate-500 dark:text-slate-400 pl-8">
+                        Word-based (Best for phrases/lists)
+                      </p>
+                    </button>
+                  </div>
+                </div>
               </div>
             )}
           </CardContent>
