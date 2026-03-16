@@ -2,7 +2,7 @@
 
 **Date:** 2026-03-16
 **Author:** Claude
-**Status:** Revised - Round 2
+**Status:** Revised - Round 3
 
 ## Overview
 
@@ -50,13 +50,24 @@ Add Jaccard Similarity algorithm as a new fuzzy matching option alongside the ex
 **New Function:**
 ```typescript
 export function jaccardSimilarity(s1: string, s2: string): number {
-  if (!s1?.trim() || !s2?.trim()) return 0
+  // Consistent with jaroWinklerSimilarity: check for falsy/empty strings
+  if (!s1 || !s2) return 0
+  if (s1 === s2) return 1
 
-  const words1 = new Set(s1.trim().toLowerCase().split(/\s+/).filter(w => w))
-  const words2 = new Set(s2.trim().toLowerCase().split(/\s+/).filter(w => w))
+  // Normalize: trim and lowercase (consistent with existing pattern)
+  const str1 = s1.trim().toLowerCase()
+  const str2 = s2.trim().toLowerCase()
 
+  if (str1 === str2) return 1
+
+  // Tokenize into words
+  const words1 = new Set(str1.split(/\s+/).filter(w => w))
+  const words2 = new Set(str2.split(/\s+/).filter(w => w))
+
+  // Handle empty sets after splitting
   if (words1.size === 0 || words2.size === 0) return 0
 
+  // Calculate Jaccard index: |intersection| / |union|
   const intersection = new Set([...words1].filter(x => words2.has(x)))
   const union = new Set([...words1, ...words2])
 
@@ -324,10 +335,10 @@ interface HistoryItem {
   fuzzyAlgorithm?: 'jaro-winkler' | 'jaccard'  // NEW
 }
 
-// Display algorithm badge
+// Display algorithm badge (shows both algorithm and threshold)
 {item.comparisonMethod === 'fuzzy' && (
   <Badge className="bg-purple-500 text-white">
-    Fuzzy ({item.fuzzyAlgorithm === 'jaccard' ? 'Jaccard' : 'Jaro-Winkler'})
+    Fuzzy ({item.fuzzyAlgorithm === 'jaccard' ? 'Jaccard' : 'Jaro-Winkler'}, {item.similarityThreshold}%)
   </Badge>
 )}
 ```
@@ -355,6 +366,7 @@ export async function POST(request: NextRequest) {
     })
 
     // Return result with fuzzyAlgorithm included
+    // NOTE: Also adding comparisonMethod to API response (not currently returned)
     return NextResponse.json({
       id: comparison.id,
       masterFile: masterFile.name,
@@ -364,8 +376,8 @@ export async function POST(request: NextRequest) {
       totalRows: result.totalRows,
       matchedRows: result.matchedRows,
       unmatchedRows: result.unmatchedRows,
-      comparisonMethod: result.comparisonMethod,
-      fuzzyAlgorithm: result.fuzzyAlgorithm,  // NEW
+      comparisonMethod: result.comparisonMethod,   // ADD (currently not returned)
+      fuzzyAlgorithm: result.fuzzyAlgorithm,       // NEW
       similarityThreshold: result.similarityThreshold
     })
   } catch (error) {
@@ -373,6 +385,46 @@ export async function POST(request: NextRequest) {
   }
 }
 ```
+
+#### History Route (`src/app/api/history/route.ts`)
+
+**Current Issue:** The history API route doesn't fetch `comparisonMethod`, `similarityThreshold`, or the new `fuzzyAlgorithm` fields from the database.
+
+**Required Update:**
+
+```typescript
+import { desc } from 'drizzle-orm'
+
+export async function GET() {
+  try {
+    const result = await db
+      .select({
+        id: comparisons.id,
+        masterFile: comparisons.masterFile,
+        secondaryFile: comparisons.secondaryFile,
+        totalRows: comparisons.totalRows,
+        matchedRows: comparisons.matchedRows,
+        unmatchedRows: comparisons.unmatchedRows,
+        createdAt: comparisons.createdAt,
+        comparisonMethod: comparisons.comparisonMethod,      // ADD
+        fuzzyAlgorithm: comparisons.fuzzyAlgorithm,          // NEW
+        similarityThreshold: comparisons.similarityThreshold  // ADD
+      })
+      .from(comparisons)
+      .orderBy(desc(comparisons.createdAt))
+
+    return NextResponse.json(result)
+  } catch (error) {
+    console.error('Error fetching history:', error)
+    return NextResponse.json(
+      { error: 'Internal server error' },
+      { status: 500 }
+    )
+  }
+}
+```
+
+**Note:** The current history page hardcodes `comparisonMethod: 'exact'` as a temporary workaround. This update will fix that.
 
 ### Error Handling
 
@@ -448,14 +500,33 @@ describe('Algorithm Selection', () => {
 - [ ] Verify history shows correct algorithm badge
 - [ ] Test API with invalid algorithm value
 
+## Performance Considerations
+
+**Memory Impact:**
+- Jaccard creates 4 Set objects per comparison (words1, words2, intersection, union)
+- For 150,000+ rows with multiple fields, this may increase GC pressure
+- Consider reusing Set objects where possible
+
+**Performance Notes:**
+- Jaccard is generally faster than Jaro-Winkler for longer strings (O(n+m) vs O(n²))
+- Set operations in JavaScript are highly optimized (V8 engine)
+- For very large datasets, consider batching to reduce memory overhead
+
+**Benchmarking Targets:**
+- Process 150,000 rows in under 30 seconds with Jaccard
+- Memory usage should not exceed 2x baseline (Jaro-Winkler)
+
 ## Implementation Order
 
 1. **Backend**
    - Add `jaccardSimilarity()` function to `similarity.ts`
    - Update `calculateAverageSimilarity()` to accept algorithm parameter
+   - Update `calculateFieldSimilarities()` to accept algorithm parameter
    - Extend `CompareOptions` and `ComparisonResult` interfaces
    - Update `compareExcelFiles()` to use selected algorithm
-   - Update API route to accept and validate `fuzzyAlgorithm`
+   - Update compare API route to accept and validate `fuzzyAlgorithm`
+   - Update compare API response to include `comparisonMethod` and `fuzzyAlgorithm`
+   - **IMPORTANT:** Update history API route to fetch `comparisonMethod`, `fuzzyAlgorithm`, and `similarityThreshold`
 
 2. **Database**
    - Create migration file `0002_add_fuzzy_algorithm.sql`
