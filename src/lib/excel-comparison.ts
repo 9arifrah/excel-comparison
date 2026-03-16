@@ -38,6 +38,7 @@ export interface ComparisonResult {
   matchedRows: number
   unmatchedRows: number
   comparisonMethod: 'exact' | 'fuzzy'
+  fuzzyAlgorithm?: 'jaro-winkler' | 'jaccard'
   similarityThreshold?: number
 }
 
