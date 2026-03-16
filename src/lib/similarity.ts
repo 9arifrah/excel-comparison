@@ -147,21 +147,26 @@ export function calculateAverageSimilarity(
 
 /**
  * Calculate similarity for individual fields
- * 
+ *
  * @param values1 - Array of values from first row
  * @param values2 - Array of values from second row (same length as values1)
+ * @param algorithm - Similarity algorithm to use ('jaro-winkler' | 'jaccard')
  * @returns Array of similarity scores (0-100) for each field
  */
 export function calculateFieldSimilarities(
   values1: string[],
-  values2: string[]
+  values2: string[],
+  algorithm: 'jaro-winkler' | 'jaccard' = 'jaro-winkler'
 ): number[] {
   if (values1.length !== values2.length) {
     throw new Error('Value arrays must have the same length')
   }
 
-  return values1.map((value, index) => 
-    jaroWinklerSimilarity(value, values2[index]) * 100
+  return values1.map((value, index) =>
+    (algorithm === 'jaccard'
+      ? jaccardSimilarity(value, values2[index])
+      : jaroWinklerSimilarity(value, values2[index])
+    ) * 100
   )
 }
 
