@@ -149,7 +149,8 @@ export async function POST(request: NextRequest) {
       masterColumns: JSON.stringify(masterColumns),
       secondaryColumns: JSON.stringify(secondaryColumns),
       comparisonMethod: result.comparisonMethod,
-      similarityThreshold: result.similarityThreshold
+      similarityThreshold: result.similarityThreshold,
+      fuzzyAlgorithm: result.fuzzyAlgorithm
     }).returning()
 
     // Return result summary
