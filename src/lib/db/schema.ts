@@ -14,6 +14,7 @@ export const comparisons = pgTable('comparisons', {
   secondaryColumns: text('secondary_columns'),
   comparisonMethod: text('comparison_method').notNull().default('exact'), // 'exact' or 'fuzzy'
   similarityThreshold: integer('similarity_threshold'), // Only for fuzzy matching (0-100)
+  fuzzyAlgorithm: text('fuzzy_algorithm').default('jaro-winkler'), // 'jaro-winkler' or 'jaccard'
   createdAt: timestamp('created_at').defaultNow().notNull(),
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
