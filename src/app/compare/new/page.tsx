@@ -450,7 +450,7 @@ export default function NewComparisonScreen() {
                   </div>
                 </div>
 
-                <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-3">
                   {[
                     { preset: 'strict' as ThresholdPreset, label: 'Strict', threshold: 95, color: 'from-red-500 to-orange-500' },
                     { preset: 'high' as ThresholdPreset, label: 'High', threshold: 85, color: 'from-orange-500 to-yellow-500' },
@@ -461,7 +461,7 @@ export default function NewComparisonScreen() {
                       key={preset}
                       onClick={() => handleThresholdPresetChange(preset)}
                       variant={thresholdPreset === preset ? 'default' : 'outline'}
-                      className={`p-4 ${thresholdPreset === preset ? `bg-gradient-to-r ${color} border-0 shadow-md` : 'border-slate-300 dark:border-slate-600'}`}
+                      className={`p-4 h-auto min-h-14 ${thresholdPreset === preset ? `bg-gradient-to-r ${color} border-0 shadow-md` : 'border-slate-300 dark:border-slate-600'}`}
                     >
                       <div className="flex flex-col items-center gap-1">
                         <span className="font-bold">{label}</span>
