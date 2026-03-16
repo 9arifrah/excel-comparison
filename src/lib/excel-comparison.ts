@@ -10,6 +10,7 @@ export interface CompareOptions {
   masterColumns: string[]
   secondaryColumns: string[]
   enableFuzzyMatching?: boolean
+  fuzzyAlgorithm?: 'jaro-winkler' | 'jaccard'
   similarityThreshold?: number
   caseSensitive?: boolean
   trimWhitespace?: boolean
