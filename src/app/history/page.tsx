@@ -81,11 +81,20 @@ export default function HistoryScreen() {
     if (!confirmed) return
     setDeletingId(id)
     try {
-      // In real app, call API to delete
+      // Call API to delete from database
+      const response = await fetch(`/api/history/${id}`, {
+        method: 'DELETE'
+      })
+
+      if (!response.ok) {
+        throw new Error('Failed to delete comparison')
+      }
+
+      // Remove from local state after successful API call
       setHistory(prev => prev.filter(item => item.id !== id))
     } catch (error) {
       console.error('Error deleting comparison:', error)
-      alert('Failed to delete comparison')
+      alert('Failed to delete comparison. Please try again.')
     } finally {
       setDeletingId(null)
     }
