@@ -39,6 +39,7 @@ export async function POST(request: NextRequest) {
     const jobIdStr = formData.get('jobId') as string | null
     const enableFuzzyMatchingStr = formData.get('enableFuzzyMatching') as string | null
     const similarityThresholdStr = formData.get('similarityThreshold') as string | null
+    const fuzzyAlgorithmStr = formData.get('fuzzyAlgorithm') as string | null
 
     // Validate files
     if (!masterFile || !secondaryFile) {
@@ -85,6 +86,19 @@ export async function POST(request: NextRequest) {
       )
     }
 
+    // Validate fuzzy algorithm if provided
+    const validAlgorithms = ['jaro-winkler', 'jaccard']
+    let fuzzyAlgorithm: 'jaro-winkler' | 'jaccard' = 'jaro-winkler'
+    if (fuzzyAlgorithmStr && enableFuzzyMatching) {
+      if (!validAlgorithms.includes(fuzzyAlgorithmStr)) {
+        return NextResponse.json(
+          { error: 'Invalid fuzzy matching algorithm. Must be jaro-winkler or jaccard' },
+          { status: 400 }
+        )
+      }
+      fuzzyAlgorithm = fuzzyAlgorithmStr as 'jaro-winkler' | 'jaccard'
+    }
+
     // Use job ID from frontend or generate new one
     const jobId = jobIdStr || uuidv4()
     console.log('[Compare API] Job ID:', jobId)
@@ -102,6 +116,7 @@ export async function POST(request: NextRequest) {
       masterColumns,
       secondaryColumns,
       enableFuzzyMatching,
+      fuzzyAlgorithm,
       similarityThreshold,
       caseSensitive: false,
       trimWhitespace: true,
@@ -148,6 +163,7 @@ export async function POST(request: NextRequest) {
       matchedRows: result.matchedRows,
       unmatchedRows: result.unmatchedRows,
       comparisonMethod: result.comparisonMethod,
+      fuzzyAlgorithm: result.fuzzyAlgorithm,
       similarityThreshold: result.similarityThreshold
     })
   } catch (error) {
