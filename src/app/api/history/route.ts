@@ -15,6 +15,9 @@ export async function GET() {
         unmatchedRows: comparisons.unmatchedRows,
         masterColumns: comparisons.masterColumns,
         secondaryColumns: comparisons.secondaryColumns,
+        comparisonMethod: comparisons.comparisonMethod,
+        fuzzyAlgorithm: comparisons.fuzzyAlgorithm,
+        similarityThreshold: comparisons.similarityThreshold,
         createdAt: comparisons.createdAt
       })
       .from(comparisons)
