@@ -116,14 +116,16 @@ export function jaccardSimilarity(s1: string, s2: string): number {
 
 /**
  * Calculate average similarity across multiple fields
- * 
+ *
  * @param values1 - Array of values from first row
  * @param values2 - Array of values from second row (same length as values1)
+ * @param algorithm - Similarity algorithm to use ('jaro-winkler' | 'jaccard')
  * @returns Average similarity score (0-100)
  */
 export function calculateAverageSimilarity(
   values1: string[],
-  values2: string[]
+  values2: string[],
+  algorithm: 'jaro-winkler' | 'jaccard' = 'jaro-winkler'
 ): number {
   if (values1.length !== values2.length) {
     throw new Error('Value arrays must have the same length')
@@ -134,7 +136,9 @@ export function calculateAverageSimilarity(
   let totalSimilarity = 0
 
   for (let i = 0; i < values1.length; i++) {
-    const similarity = jaroWinklerSimilarity(values1[i], values2[i])
+    const similarity = algorithm === 'jaccard'
+      ? jaccardSimilarity(values1[i], values2[i])
+      : jaroWinklerSimilarity(values1[i], values2[i])
     totalSimilarity += similarity
   }
 
