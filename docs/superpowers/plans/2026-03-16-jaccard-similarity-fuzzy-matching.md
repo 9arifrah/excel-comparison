@@ -10,6 +10,29 @@
 
 ---
 
+## Prerequisites
+
+### Task 0: Verify Testing Framework
+
+**Files:**
+- Check: `package.json`
+
+- [ ] **Step 1: Check if testing framework exists**
+
+Run: `cat package.json | grep -E "(vitest|jest|test)"`
+Expected: If no test framework is found, skip Tasks 1-3 tests and implement without TDD
+
+- [ ] **Step 2: If no test framework, note this for implementation**
+
+If no test framework exists:
+- Implement the functions without TDD (write code directly)
+- Test manually using the application
+- Consider adding test framework setup as a separate task
+
+Note: Current project may not have a test framework configured. Proceed accordingly.
+
+---
+
 ## File Structure
 
 ### Files to Modify
@@ -507,6 +530,15 @@ const fuzzyAlgorithmStr = formData.get('fuzzyAlgorithm') as string | null
 
 // Validate fuzzy algorithm
 const validAlgorithms = ['jaro-winkler', 'jaccard']
+
+// If fuzzy matching is enabled and algorithm is provided but invalid, return error
+if (enableFuzzyMatching && fuzzyAlgorithmStr && !validAlgorithms.includes(fuzzyAlgorithmStr)) {
+  return NextResponse.json(
+    { error: 'Invalid fuzzy matching algorithm' },
+    { status: 400 }
+  )
+}
+
 const fuzzyAlgorithm = fuzzyAlgorithmStr && validAlgorithms.includes(fuzzyAlgorithmStr)
   ? fuzzyAlgorithmStr as 'jaro-winkler' | 'jaccard'
   : 'jaro-winkler'  // Default
@@ -530,7 +562,28 @@ const result = await compareExcelFiles(masterBuffer, secondaryBuffer, {
 })
 ```
 
-- [ ] **Step 4: Update API response to include comparisonMethod and fuzzyAlgorithm**
+- [ ] **Step 4: Update database insert to include fuzzyAlgorithm**
+
+Find the db.insert() call (around line 125-138) and add fuzzyAlgorithm:
+```typescript
+const [comparison] = await db.insert(comparisons).values({
+  masterFile: masterFile.name,
+  secondaryFile: secondaryFile.name,
+  totalRows: result.totalRows,
+  matchedRows: result.matchedRows,
+  unmatchedRows: result.unmatchedRows,
+  masterData: JSON.stringify(result.masterData),
+  secondaryData: JSON.stringify(result.secondaryData),
+  comparisonData: JSON.stringify(result.comparisonData),
+  masterColumns: JSON.stringify(masterColumns),
+  secondaryColumns: JSON.stringify(secondaryColumns),
+  comparisonMethod: result.comparisonMethod,
+  fuzzyAlgorithm: result.fuzzyAlgorithm,  // NEW - persist to database
+  similarityThreshold: result.similarityThreshold
+}).returning()
+```
+
+- [ ] **Step 5: Update API response to include comparisonMethod and fuzzyAlgorithm**
 
 Find the return statement (around line 140-155) and update:
 ```typescript
@@ -549,26 +602,30 @@ return NextResponse.json({
 })
 ```
 
-- [ ] **Step 5: Run TypeScript check**
+- [ ] **Step 6: Run TypeScript check**
 
 Run: `npx tsc --noEmit`
 Expected: No errors
 
-- [ ] **Step 6: Test API endpoint manually**
+- [ ] **Step 7: Test API endpoint manually**
 
 Run: `npm run dev`
 Test with: `curl -X POST http://localhost:3000/api/compare -F "masterFile=@test1.xlsx" -F "secondaryFile=@test2.xlsx" -F "masterColumns=[\"name\"]" -F "secondaryColumns=[\"name\"]" -F "enableFuzzyMatching=true" -F "fuzzyAlgorithm=jaccard"`
 Expected: 200 OK response with fuzzyAlgorithm in result
 
-- [ ] **Step 7: Commit**
+Test invalid algorithm: `curl -X POST http://localhost:3000/api/compare -F "masterFile=@test1.xlsx" -F "secondaryFile=@test2.xlsx" -F "masterColumns=[\"name\"]" -F "secondaryColumns=[\"name\"]" -F "enableFuzzyMatching=true" -F "fuzzyAlgorithm=invalid"`
+Expected: 400 error with "Invalid fuzzy matching algorithm"
+
+- [ ] **Step 8: Commit**
 
 ```bash
 git add src/app/api/compare/route.ts
 git commit -m "feat: add fuzzyAlgorithm support to compare API
 
 - Accept and validate fuzzyAlgorithm parameter
-- Default to 'jaro-winkler' if not provided or invalid
+- Return 400 error for invalid algorithm values
 - Pass through to compareExcelFiles function
+- Persist fuzzyAlgorithm to database
 - Include comparisonMethod and fuzzyAlgorithm in API response
 
 Co-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>"
@@ -776,6 +833,19 @@ Familiarize yourself with the current state and structure
 Find the state declarations (around line 22-35) and add:
 ```typescript
 const [fuzzyAlgorithm, setFuzzyAlgorithm] = useState<'jaro-winkler' | 'jaccard'>('jaro-winkler')
+```
+
+- [ ] **Step 2.5: Add Settings icon import (if not already present)**
+
+Check the imports at top of file (around line 1-15). Look for existing lucide-react imports.
+Find line with: `import { ... } from 'lucide-react'`
+Add `Settings` to the import list if not present:
+```typescript
+import {
+  // ... existing icons
+  Settings,  // ADD
+  // ... other icons
+} from 'lucide-react'
 ```
 
 - [ ] **Step 3: Add algorithm selector UI component**
