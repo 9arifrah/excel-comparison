@@ -81,6 +81,40 @@ export function jaroWinklerSimilarity(s1: string, s2: string): number {
 }
 
 /**
+ * Jaccard Similarity Algorithm
+ * Optimized for comparing phrases and word order variations
+ * Uses word tokenization and set intersection/union for comparison
+ *
+ * @param s1 - First string
+ * @param s2 - Second string
+ * @returns Similarity score between 0 and 1
+ */
+export function jaccardSimilarity(s1: string, s2: string): number {
+  // Consistent with jaroWinklerSimilarity: check for falsy/empty strings
+  if (!s1 || !s2) return 0
+  if (s1 === s2) return 1
+
+  // Normalize: trim and lowercase (consistent with existing pattern)
+  const str1 = s1.trim().toLowerCase()
+  const str2 = s2.trim().toLowerCase()
+
+  if (str1 === str2) return 1
+
+  // Tokenize into words
+  const words1 = new Set(str1.split(/\s+/).filter(w => w))
+  const words2 = new Set(str2.split(/\s+/).filter(w => w))
+
+  // Handle empty sets after splitting
+  if (words1.size === 0 || words2.size === 0) return 0
+
+  // Calculate Jaccard index: |intersection| / |union|
+  const intersection = new Set([...words1].filter(x => words2.has(x)))
+  const union = new Set([...words1, ...words2])
+
+  return intersection.size / union.size
+}
+
+/**
  * Calculate average similarity across multiple fields
  * 
  * @param values1 - Array of values from first row
