@@ -73,6 +73,7 @@ export async function compareExcelFiles(
     masterColumns,
     secondaryColumns,
     enableFuzzyMatching = false,
+    fuzzyAlgorithm = 'jaro-winkler',
     similarityThreshold = 85,
     caseSensitive = false,
     trimWhitespace = true,
@@ -115,6 +116,7 @@ export async function compareExcelFiles(
       masterColumns,
       secondaryColumns,
       similarityThreshold,
+      fuzzyAlgorithm,
       onProgress
     )
   } else {
@@ -245,6 +247,7 @@ function performFuzzyComparison(
   masterColumns: string[],
   secondaryColumns: string[],
   similarityThreshold: number,
+  fuzzyAlgorithm: 'jaro-winkler' | 'jaccard',
   onProgress?: (progress: ProgressInfo) => void
 ): ComparisonResult {
   // Stage 3: Build phonetic index for master data
@@ -316,16 +319,16 @@ function performFuzzyComparison(
       // Compare with candidates to find best match
       for (const candidate of candidates) {
         const masterValues = masterColumns.map(col => String(candidate[col] || ''))
-        
+
         // Calculate average similarity
-        const avgSimilarity = calculateAverageSimilarity(masterValues, secondaryValues)
+        const avgSimilarity = calculateAverageSimilarity(masterValues, secondaryValues, fuzzyAlgorithm)
         
         if (avgSimilarity > bestSimilarityScore) {
           bestSimilarityScore = avgSimilarity
           bestMatch = candidate
-          
+
           // Calculate per-column similarities
-          const fieldSimilarities = calculateFieldSimilarities(masterValues, secondaryValues)
+          const fieldSimilarities = calculateFieldSimilarities(masterValues, secondaryValues, fuzzyAlgorithm)
           bestColumnSimilarities = {}
           masterColumns.forEach((col, idx) => {
             bestColumnSimilarities[col] = fieldSimilarities[idx]
@@ -342,13 +345,13 @@ function performFuzzyComparison(
       for (let j = 0; j < masterData.length && j < sampleSize * step; j += step) {
         const candidate = masterData[j]
         const masterValues = masterColumns.map(col => String(candidate[col] || ''))
-        const avgSimilarity = calculateAverageSimilarity(masterValues, secondaryValues)
+        const avgSimilarity = calculateAverageSimilarity(masterValues, secondaryValues, fuzzyAlgorithm)
         
         if (avgSimilarity > bestSimilarityScore) {
           bestSimilarityScore = avgSimilarity
           bestMatch = candidate
-          
-          const fieldSimilarities = calculateFieldSimilarities(masterValues, secondaryValues)
+
+          const fieldSimilarities = calculateFieldSimilarities(masterValues, secondaryValues, fuzzyAlgorithm)
           bestColumnSimilarities = {}
           masterColumns.forEach((col, idx) => {
             bestColumnSimilarities[col] = fieldSimilarities[idx]
@@ -401,6 +404,7 @@ function performFuzzyComparison(
     matchedRows,
     unmatchedRows,
     comparisonMethod: 'fuzzy',
+    fuzzyAlgorithm,
     similarityThreshold
   }
 }
