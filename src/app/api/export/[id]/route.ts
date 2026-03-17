@@ -26,23 +26,58 @@ export async function GET(
 
     // Parse comparison data
     const comparisonData = JSON.parse(comparison.comparisonData)
+    const masterData = JSON.parse(comparison.masterData)
     const secondaryData = JSON.parse(comparison.secondaryData)
+    const masterColumns = comparison.masterColumns ? JSON.parse(comparison.masterColumns) : []
+    const secondaryColumns = comparison.secondaryColumns ? JSON.parse(comparison.secondaryColumns) : []
 
-    // Create worksheet with MATCH_STATUS column
+    // Create worksheet with master and secondary data
     const worksheetData: any[] = []
 
-    if (secondaryData.length > 0) {
-      // Get columns from secondary data
-      const columns = Object.keys(secondaryData[0])
+    if (comparisonData.length > 0) {
+      // Create header row with Master columns, Secondary columns, and status
+      const headers: string[] = []
 
-      // Add header row with MATCH_STATUS
-      worksheetData.push([...columns, 'MATCH_STATUS'])
+      // Add master column headers
+      masterColumns.forEach((col: string) => {
+        headers.push(`Master: ${col}`)
+      })
+
+      // Add secondary column headers
+      secondaryColumns.forEach((col: string) => {
+        headers.push(`Secondary: ${col}`)
+      })
+
+      // Add status columns
+      headers.push('MATCH_STATUS', 'SIMILARITY_SCORE')
+
+      worksheetData.push(headers)
 
       // Add data rows
       comparisonData.forEach((item: any, index: number) => {
+        const rowData: any[] = []
+
+        // Add master data values (from matched master row)
+        if (item.masterRow) {
+          masterColumns.forEach((col: string) => {
+            rowData.push(item.masterRow[col] !== undefined && item.masterRow[col] !== null ? item.masterRow[col] : '')
+          })
+        } else {
+          masterColumns.forEach(() => {
+            rowData.push('')
+          })
+        }
+
+        // Add secondary data values
         const row = secondaryData[index] || {}
-        const rowData = columns.map(col => row[col] || '')
+        secondaryColumns.forEach((col: string) => {
+          rowData.push(row[col] !== undefined && row[col] !== null ? row[col] : '')
+        })
+
+        // Add status columns
         rowData.push(item.matched ? 'Matched' : 'Unmatched')
+        rowData.push(item.similarityScore !== undefined ? item.similarityScore.toFixed(2) + '%' : '')
+
         worksheetData.push(rowData)
       })
     }
