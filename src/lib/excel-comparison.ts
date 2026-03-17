@@ -33,6 +33,7 @@ export interface ComparisonResult {
     similarityScore?: number
     columnSimilarities?: { [key: string]: number }
     data: any
+    masterRow?: any
   }>
   totalRows: number
   matchedRows: number
@@ -184,6 +185,7 @@ function performExactComparison(
     row: number
     matched: boolean
     data: any
+    masterRow?: any
   }> = []
 
   let matchedRows = 0
@@ -203,7 +205,8 @@ function performExactComparison(
     comparisonData.push({
       row: i + 1,
       matched: isMatched,
-      data: row
+      data: row,
+      masterRow: isMatched ? masterIndex.get(hashKey) : undefined
     })
 
     // Report progress every chunk
@@ -296,6 +299,7 @@ function performFuzzyComparison(
     similarityScore?: number
     columnSimilarities?: { [key: string]: number }
     data: any
+    masterRow?: any
   }> = []
 
   let matchedRows = 0
@@ -373,7 +377,8 @@ function performFuzzyComparison(
       matched: isMatched,
       similarityScore: bestSimilarityScore,
       columnSimilarities: bestColumnSimilarities,
-      data: secondaryRow
+      data: secondaryRow,
+      masterRow: bestMatch || undefined
     })
 
     // Report progress every chunk

@@ -201,6 +201,11 @@ function ResultsScreen() {
     return Object.keys(comparisonData[0].data)
   }
 
+  const getMasterFieldNames = () => {
+    if (!comparisonResult.masterColumns || comparisonResult.masterColumns.length === 0) return []
+    return comparisonResult.masterColumns
+  }
+
   const getSimilarityColor = (score?: number) => {
     if (score === undefined) return 'text-slate-500'
     if (score >= 90) return 'text-green-600'
@@ -429,29 +434,34 @@ function ResultsScreen() {
                   <Table>
                     <TableHeader>
                       <TableRow className="hover:bg-slate-50/50 dark:hover:bg-slate-800/50 bg-slate-100/50 dark:bg-slate-800/50">
-                        <TableHead className="sticky left-0 z-20 w-16 font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 shadow-md">Row #</TableHead>
-                        <TableHead className="sticky left-16 z-20 w-48 pr-6 font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 shadow-md">Status</TableHead>
+                        <TableHead className="sticky left-0 z-30 w-16 font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 shadow-md">Row #</TableHead>
+                        <TableHead className="sticky left-16 z-30 w-48 pr-6 font-bold text-slate-700 dark:text-slate-300 bg-slate-100 dark:bg-slate-800 shadow-md">Status</TableHead>
+                        {getMasterFieldNames().map((fieldName) => (
+                          <TableHead key={`master-${fieldName}`} className="font-bold text-blue-600 dark:text-blue-400 min-w-[120px] pl-6 bg-blue-50/30 dark:bg-blue-900/10">
+                            Master: {fieldName}
+                          </TableHead>
+                        ))}
                         {getFieldNames().map((fieldName) => (
-                          <TableHead key={fieldName} className="font-bold text-slate-700 dark:text-slate-300 min-w-[120px] pl-6">
-                            {fieldName}
+                          <TableHead key={`secondary-${fieldName}`} className="font-bold text-purple-600 dark:text-purple-400 min-w-[120px] pl-6 bg-purple-50/30 dark:bg-purple-900/10">
+                            Secondary: {fieldName}
                           </TableHead>
                         ))}
                       </TableRow>
                     </TableHeader>
                     <TableBody>
                       {paginatedData.map((item) => (
-                        <TableRow 
+                        <TableRow
                           key={item.row}
                           className={`hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors duration-200 ${
-                            item.matched 
-                              ? 'bg-green-50/30 dark:bg-green-900/10' 
+                            item.matched
+                              ? 'bg-green-50/30 dark:bg-green-900/10'
                               : 'bg-red-50/30 dark:bg-red-900/10'
                           }`}
                         >
-                          <TableCell className="sticky left-0 z-20 font-medium text-slate-700 dark:text-slate-300 bg-green-50/30 dark:bg-green-900/10 shadow-sm">
+                          <TableCell className="sticky left-0 z-20 font-medium text-slate-700 dark:text-slate-300 bg-white dark:bg-slate-800 shadow-sm">
                             #{item.row}
                           </TableCell>
-                          <TableCell className="sticky left-16 z-20 w-48 pr-6 bg-green-50/30 dark:bg-green-900/10 shadow-sm">
+                          <TableCell className="sticky left-16 z-20 w-48 pr-6 bg-white dark:bg-slate-800 shadow-sm">
                             <div className="space-y-1">
                               <Badge className={`${item.matched ? 'bg-gradient-to-r from-green-500 to-emerald-500' : 'bg-gradient-to-r from-red-500 to-orange-500'} text-white border-0 shadow-md`}>
                                 {item.matched ? <CheckCircle className="w-3 h-3 mr-1" /> : <XCircle className="w-3 h-3 mr-1" />}
@@ -464,14 +474,31 @@ function ResultsScreen() {
                               )}
                             </div>
                           </TableCell>
+                          {/* Master Data Columns */}
+                          {getMasterFieldNames().map((fieldName) => {
+                            const masterRow = item.masterRow
+                            let displayValue = 'N/A'
+                            if (masterRow && masterRow[fieldName] !== undefined && masterRow[fieldName] !== null && masterRow[fieldName] !== '') {
+                              displayValue = String(masterRow[fieldName])
+                            }
+                            return (
+                              <TableCell
+                                key={`master-${item.row}-${fieldName}`}
+                                className="text-slate-700 dark:text-slate-300 min-w-[120px] pl-6 bg-blue-50/20 dark:bg-blue-900/5"
+                              >
+                                {displayValue}
+                              </TableCell>
+                            )
+                          })}
+                          {/* Secondary Data Columns */}
                           {getFieldNames().map((fieldName) => {
                             const value = (item.data as any)[fieldName]
                             const displayValue = value !== undefined && value !== null && value !== '' ? String(value) : 'N/A'
                             const colSimilarity = item.columnSimilarities?.[fieldName]
                             return (
-                              <TableCell 
-                                key={`${item.row}-${fieldName}`}
-                                className="text-slate-700 dark:text-slate-300 min-w-[120px] pl-6"
+                              <TableCell
+                                key={`secondary-${item.row}-${fieldName}`}
+                                className="text-slate-700 dark:text-slate-300 min-w-[120px] pl-6 bg-purple-50/20 dark:bg-purple-900/5"
                               >
                                 {displayValue}
                                 {colSimilarity !== undefined && (
