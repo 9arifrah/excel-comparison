@@ -35,16 +35,20 @@ export async function GET(
     const worksheetData: any[] = []
 
     if (comparisonData.length > 0) {
-      // Create header row with Master columns, Secondary columns, and status
+      // Get ALL columns from master and secondary data (not just selected ones)
+      const allMasterColumns = masterData.length > 0 ? Object.keys(masterData[0]) : []
+      const allSecondaryColumns = secondaryData.length > 0 ? Object.keys(secondaryData[0]) : []
+
+      // Create header row with ALL Master columns, ALL Secondary columns, and status
       const headers: string[] = []
 
-      // Add master column headers
-      masterColumns.forEach((col: string) => {
+      // Add ALL master column headers
+      allMasterColumns.forEach((col: string) => {
         headers.push(`Master: ${col}`)
       })
 
-      // Add secondary column headers
-      secondaryColumns.forEach((col: string) => {
+      // Add ALL secondary column headers
+      allSecondaryColumns.forEach((col: string) => {
         headers.push(`Secondary: ${col}`)
       })
 
@@ -57,20 +61,20 @@ export async function GET(
       comparisonData.forEach((item: any, index: number) => {
         const rowData: any[] = []
 
-        // Add master data values (from matched master row)
+        // Add ALL master data values (from matched master row)
         if (item.masterRow) {
-          masterColumns.forEach((col: string) => {
+          allMasterColumns.forEach((col: string) => {
             rowData.push(item.masterRow[col] !== undefined && item.masterRow[col] !== null ? item.masterRow[col] : '')
           })
         } else {
-          masterColumns.forEach(() => {
+          allMasterColumns.forEach(() => {
             rowData.push('')
           })
         }
 
-        // Add secondary data values
+        // Add ALL secondary data values
         const row = secondaryData[index] || {}
-        secondaryColumns.forEach((col: string) => {
+        allSecondaryColumns.forEach((col: string) => {
           rowData.push(row[col] !== undefined && row[col] !== null ? row[col] : '')
         })
 
