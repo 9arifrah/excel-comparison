@@ -111,7 +111,7 @@ BEGIN
   WHERE "user_id" IS NULL;
 
   -- Only proceed if there are unassigned comparisons
-  IF existing_count >  THEN
+  IF existing_count > 0 THEN
     -- Use advisory lock to prevent race conditions
     PERFORM pg_advisory_xact_lock(123456789);
 
@@ -120,7 +120,7 @@ BEGIN
     FROM "comparisons"
     WHERE "user_id" IS NULL;
 
-    IF existing_count >  THEN
+    IF existing_count > 0 THEN
       -- Get the first user's ID
       first_user_id := NEW.id;
 
@@ -151,6 +151,8 @@ AFTER INSERT ON "auth"."users"
 FOR EACH ROW
 EXECUTE FUNCTION assign_comparisons_to_first_user();
 ```
+
+**Important:** Triggers on `auth.users` must be created using the Supabase SQL Editor in the dashboard, as regular migration tools don't have access to the `auth` schema.
 
 #### Row Level Security (RLS) Policies
 
@@ -205,19 +207,21 @@ import { createServerClient } from '@supabase/ssr'
 import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
+  let response = NextResponse.next({ request: { headers: req.headers } })
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) {
-          return req.cookies.get(name)?.value
+        getAll() {
+          return req.cookies.getAll()
         },
-        set(name, value, options) {
-          req.cookies.set({ name, value, ...options })
-        },
-        remove(name, options) {
-          req.cookies.delete({ name, ...options })
+        setAll(cookiesToSet) {
+          cookiesToSet.forEach(({ name, value, options }) => {
+            req.cookies.set(name, value)
+            response.cookies.set(name, value, options)
+          })
         },
       },
     }
@@ -236,7 +240,7 @@ export async function middleware(req: NextRequest) {
     return NextResponse.redirect(new URL('/', req.url))
   }
 
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
@@ -311,20 +315,26 @@ export function createClient() {
 import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
-export function createClient() {
-  const cookieStore = cookies()
+export async function createClient() {
+  const cookieStore = await cookies()
 
   return createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
     {
       cookies: {
-        get(name) { return cookieStore.get(name)?.value },
-        set(name, value, options) {
-          cookieStore.set({ name, value, ...options })
+        getAll() {
+          return cookieStore.getAll()
         },
-        remove(name, options) {
-          cookieStore.set({ name, value: '', ...options })
+        setAll(cookiesToSet) {
+          try {
+            cookiesToSet.forEach(({ name, value, options }) => {
+              cookieStore.set(name, value, options)
+            })
+          } catch {
+            // The `setAll` method was called from a Server Component.
+            // This can be ignored if you have middleware refreshing user sessions.
+          }
         },
       },
     }
@@ -376,6 +386,7 @@ NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 
 # OAuth Providers (configured in Supabase Dashboard)
 NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=your-google-client-id
+GOOGLE_OAUTH_CLIENT_SECRET=your-google-client-secret
 GITHUB_OAUTH_CLIENT_ID=your-github-client-id
 GITHUB_OAUTH_CLIENT_SECRET=your-github-client-secret
 ```
@@ -388,16 +399,16 @@ npm install @supabase/ssr
 
 ### Phase 3: Supabase Dashboard Configuration
 
-1. Enable Authentication di Supabase project
+1. Enable Authentication in Supabase project
 2. Configure Google OAuth:
-   - Buat project di Google Cloud Console
+   - Create project in Google Cloud Console
    - Add OAuth consent screen
    - Get Client ID and Secret
 3. Configure GitHub OAuth:
-   - Buat OAuth App di GitHub Developer Settings
+   - Create OAuth App in GitHub Developer Settings
    - Set Authorization callback URL
    - Get Client ID and Secret
-4. Enable Email provider (opsional)
+4. Enable Email provider (optional)
 5. Copy environment variables
 
 ### Phase 4: Database Migration
@@ -479,6 +490,8 @@ FOR EACH ROW
 EXECUTE FUNCTION assign_comparisons_to_first_user();
 ```
 
+**Note:** The trigger on `auth.users` must be created using the Supabase SQL Editor in the dashboard, as regular migration tools don't have access to the `auth` schema.
+
 **Step 4:** Enable Row Level Security policies
 ```sql
 -- Enable RLS on comparisons table
@@ -523,6 +536,11 @@ USING (auth.uid() = "assigned_to");
 ### Phase 5: Optional Manual Migration Script
 
 **Note:** The database trigger created in Step 3 automatically assigns existing comparisons to the first user who signs up. This manual script is only needed if you want to migrate data before deploying or need to reassign data.
+
+**Important:** If using this manual migration script, you need to install `@supabase/supabase-js` separately:
+```bash
+npm install @supabase/supabase-js
+```
 
 **`scripts/migrate-existing-comparisons.ts`:**
 
@@ -674,6 +692,22 @@ const handleLogout = async () => {
 
 **1. Database Rollback:**
 ```sql
+-- Drop trigger
+DROP TRIGGER IF EXISTS on_first_user_signup ON "auth"."users";
+
+-- Drop function
+DROP FUNCTION IF EXISTS assign_comparisons_to_first_user();
+
+-- Disable and drop RLS policies
+ALTER TABLE "comparisons" DISABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "users_can_only_view_own_comparisons" ON "comparisons";
+DROP POLICY IF EXISTS "users_can_only_insert_own_comparisons" ON "comparisons";
+DROP POLICY IF EXISTS "users_can_only_update_own_comparisons" ON "comparisons";
+DROP POLICY IF EXISTS "users_can_only_delete_own_comparisons" ON "comparisons";
+
+ALTER TABLE "admin_assignments" DISABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "users_can_only_view_own_admin_assignments" ON "admin_assignments";
+
 -- Drop foreign key constraint
 ALTER TABLE "comparisons"
 DROP CONSTRAINT IF EXISTS "comparisons_user_id_fkey";
