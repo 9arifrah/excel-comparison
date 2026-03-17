@@ -29,6 +29,7 @@ interface HistoryItem {
   unmatchedRows: number
   createdAt: string
   comparisonMethod: 'exact' | 'fuzzy'
+  fuzzyAlgorithm?: 'jaro-winkler' | 'jaccard'
   similarityThreshold?: number
 }
 
@@ -60,8 +61,9 @@ export default function HistoryScreen() {
           matchedRows: item.matchedRows,
           unmatchedRows: item.unmatchedRows,
           createdAt: item.createdAt,
-          comparisonMethod: 'exact' as 'exact' | 'fuzzy', // Default to exact for now
-          similarityThreshold: undefined // Not stored in current schema
+          comparisonMethod: item.comparisonMethod,
+          fuzzyAlgorithm: item.fuzzyAlgorithm,
+          similarityThreshold: item.similarityThreshold
         }))
         
         setHistory(transformedData)
@@ -247,7 +249,7 @@ export default function HistoryScreen() {
                         </h3>
                         {item.comparisonMethod === 'fuzzy' && (
                           <Badge className="bg-purple-500 text-white">
-                            Fuzzy ({item.similarityThreshold}%)
+                            Fuzzy ({item.fuzzyAlgorithm || 'jaro-winkler'}, {item.similarityThreshold || 85}%)
                           </Badge>
                         )}
                       </div>
