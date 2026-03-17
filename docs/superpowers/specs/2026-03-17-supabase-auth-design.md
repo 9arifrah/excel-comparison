@@ -23,34 +23,30 @@ Add Supabase Authentication to protect the Excel comparison application, ensurin
 ```
 src/
 ├── app/
-│   ├── (auth)/                   # Auth routes group
-│   │   ├── login/
-│   │   │   └── page.tsx        # Login page
-│   │   ├── auth-callback/
-│   │   │   └── route.ts        # OAuth callback handler
-│   │   └── layout.tsx           # Auth layout
-│   ├── (main)/                  # Protected routes group
-│   │   ├── compare/            # Comparison pages
-│   │   ├── history/            # History page
-│   │   └── page.tsx            # Home page
-│   ├── layout.tsx               # Root layout with auth provider
+│   ├── login/                   # Login page (standalone route)
+│   │   └── page.tsx            # Login page
+│   ├── auth-callback/          # OAuth callback handler
+│   │   └── route.ts           # OAuth callback handler
+│   ├── compare/                # Protected comparison pages
+│   ├── history/                # Protected history page
+│   ├── page.tsx                # Protected home page
+│   ├── layout.tsx              # Root layout with auth provider
 │   └── middleware.ts           # Route protection middleware
 ├── lib/
 │   ├── supabase/
 │   │   ├── client.ts          # Browser client for client components
-│   │   ├── server.ts          # Server client for server components
-│   │   └── middleware.ts     # Auth helper functions
+│   │   └── server.ts          # Server client for server components
 │   └── db/
 │       └── schema.ts          # Updated with user_id and adminAssignments
 └── scripts/
-    └── migrate-existing-comparisons.ts  # One-time migration script
+    └── migrate-existing-comparisons.ts  # One-time migration script (optional)
 ```
 
 ### Technology Stack
 
 - **Auth Provider:** Supabase Auth
 - **Next.js Version:** 16 (App Router)
-- **Libraries:** `@supabase/ssr`, `@supabase/auth-helpers-nextjs`
+- **Libraries:** `@supabase/ssr` (official package for Next.js App Router)
 - **Database:** Supabase PostgreSQL (existing)
 
 ## Database Schema
@@ -97,33 +93,150 @@ CREATE INDEX "admin_assignments_assigned_to_idx"
 ON "admin_assignments"("assigned_to");
 ```
 
+#### Database Function for First User Detection
+
+To handle the race condition where multiple users might register simultaneously, we'll use a database function with proper locking:
+
+```sql
+-- Function to assign existing comparisons to first user (called via database trigger)
+CREATE OR REPLACE FUNCTION assign_comparisons_to_first_user()
+RETURNS TRIGGER AS $$
+DECLARE
+  existing_count INTEGER;
+  first_user_id TEXT;
+BEGIN
+  -- Check if there are any comparisons without user_id
+  SELECT COUNT(*) INTO existing_count
+  FROM "comparisons"
+  WHERE "user_id" IS NULL;
+
+  -- Only proceed if there are unassigned comparisons
+  IF existing_count >  THEN
+    -- Use advisory lock to prevent race conditions
+    PERFORM pg_advisory_xact_lock(123456789);
+
+    -- Double-check after acquiring lock
+    SELECT COUNT(*) INTO existing_count
+    FROM "comparisons"
+    WHERE "user_id" IS NULL;
+
+    IF existing_count >  THEN
+      -- Get the first user's ID
+      first_user_id := NEW.id;
+
+      -- Update all existing comparisons
+      UPDATE "comparisons"
+      SET "user_id" = first_user_id
+      WHERE "user_id" IS NULL;
+
+      -- Record assignments in admin_assignments table
+      INSERT INTO "admin_assignments" ("id", "old_id", "assigned_to", "assigned_at")
+      SELECT
+        gen_random_uuid()::text,
+        "id",
+        first_user_id,
+        now()
+      FROM "comparisons"
+      WHERE "user_id" = first_user_id;
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to automatically assign on first user signup
+CREATE TRIGGER on_first_user_signup
+AFTER INSERT ON "auth"."users"
+FOR EACH ROW
+EXECUTE FUNCTION assign_comparisons_to_first_user();
+```
+
+#### Row Level Security (RLS) Policies
+
+Row Level Security provides defense-in-depth by enforcing data access at the database level. Even if application-level checks fail, RLS prevents unauthorized access.
+
+**Enable RLS on comparisons table:**
+
+```sql
+-- Enable RLS
+ALTER TABLE "comparisons" ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can only see their own comparisons
+CREATE POLICY "users_can_only_view_own_comparisons"
+ON "comparisons"
+FOR SELECT
+USING (auth.uid() = "user_id");
+
+-- Policy: Users can only insert their own comparisons
+CREATE POLICY "users_can_only_insert_own_comparisons"
+ON "comparisons"
+FOR INSERT
+WITH CHECK (auth.uid() = "user_id");
+
+-- Policy: Users can only update their own comparisons
+CREATE POLICY "users_can_only_update_own_comparisons"
+ON "comparisons"
+FOR UPDATE
+USING (auth.uid() = "user_id");
+
+-- Policy: Users can only delete their own comparisons
+CREATE POLICY "users_can_only_delete_own_comparisons"
+ON "comparisons"
+FOR DELETE
+USING (auth.uid() = "user_id");
+
+-- Enable RLS on admin_assignments table
+ALTER TABLE "admin_assignments" ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can only view their own admin assignments
+CREATE POLICY "users_can_only_view_own_admin_assignments"
+ON "admin_assignments"
+FOR SELECT
+USING (auth.uid() = "assigned_to");
+```
+
 ## Middleware & Route Protection
 
 ### Middleware (`src/middleware.ts`)
 
 ```typescript
-import { createMiddlewareClient } from '@supabase/auth-helpers-nextjs'
-import { NextResponse } from 'next/server'
-import type { NextRequest } from 'next/server'
+import { createServerClient } from '@supabase/ssr'
+import { NextResponse, type NextRequest } from 'next/server'
 
 export async function middleware(req: NextRequest) {
-  const res = NextResponse.next()
-  const supabase = createMiddlewareClient({ req, res })
+  const supabase = createServerClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
+    {
+      cookies: {
+        get(name) {
+          return req.cookies.get(name)?.value
+        },
+        set(name, value, options) {
+          req.cookies.set({ name, value, ...options })
+        },
+        remove(name, options) {
+          req.cookies.delete({ name, ...options })
+        },
+      },
+    }
+  )
 
   const { data: { session } } = await supabase.auth.getSession()
 
-  // Redirect to login if no session (except auth routes)
-  if (!session && !req.nextUrl.pathname.startsWith('/auth')) {
+  // Redirect to login if no session (except login page)
+  if (!session && req.nextUrl.pathname !== '/login') {
     const redirectUrl = new URL('/login', req.url)
-    return NextResponse.redirect(redirectUrl.toString())
+    return NextResponse.redirect(redirectUrl)
   }
 
-  // Redirect to home if already authenticated and trying to access auth routes
-  if (session && req.nextUrl.pathname.startsWith('/auth')) {
-    return NextResponse.redirect(new URL('/', req.url).toString())
+  // Redirect to home if already authenticated and trying to access login page
+  if (session && req.nextUrl.pathname === '/login') {
+    return NextResponse.redirect(new URL('/', req.url))
   }
 
-  return res
+  return NextResponse.next()
 }
 
 export const config = {
@@ -151,7 +264,7 @@ export default async function ProtectedPage() {
 
 ## UI Components
 
-### Login Page (`src/app/(auth)/login/page.tsx`)
+### Login Page (`src/app/login/page.tsx`)
 
 **Features:**
 - Google OAuth button
@@ -224,11 +337,11 @@ export function createClient() {
 **Update all protected API routes:**
 
 ```typescript
-import { createRouteHandlerClient } from '@supabase/auth-helpers-nextjs'
-import { cookies } from 'next/headers'
+import { createClient } from '@/lib/supabase/server'
+import { NextRequest, NextResponse } from 'next/server'
 
 export async function POST(request: NextRequest) {
-  const supabase = createRouteHandlerClient({ cookies })
+  const supabase = createClient()
   const { data: { session } } = await supabase.auth.getSession()
 
   if (!session?.user) {
@@ -257,14 +370,20 @@ export async function POST(request: NextRequest) {
 
 **Environment Variables (`.env.local`):**
 ```bash
+# Supabase Configuration
 NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
 NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+
+# OAuth Providers (configured in Supabase Dashboard)
+NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID=your-google-client-id
+GITHUB_OAUTH_CLIENT_ID=your-github-client-id
+GITHUB_OAUTH_CLIENT_SECRET=your-github-client-secret
 ```
 
 ### Phase 2: Install Dependencies
 
 ```bash
-npm install @supabase/ssr @supabase/auth-helpers-nextjs
+npm install @supabase/ssr
 ```
 
 ### Phase 3: Supabase Dashboard Configuration
@@ -304,9 +423,106 @@ CREATE INDEX "admin_assignments_assigned_to_idx"
 ON "admin_assignments"("assigned_to");
 ```
 
-**Step 3:** One-time migration script (run after first user registers)
+**Step 3:** Create database function and trigger for first-user detection
+```sql
+-- Function to assign existing comparisons to first user
+CREATE OR REPLACE FUNCTION assign_comparisons_to_first_user()
+RETURNS TRIGGER AS $$
+DECLARE
+  existing_count INTEGER;
+  first_user_id TEXT;
+BEGIN
+  -- Check if there are any comparisons without user_id
+  SELECT COUNT(*) INTO existing_count
+  FROM "comparisons"
+  WHERE "user_id" IS NULL;
 
-### Phase 5: First User Setup Script
+  -- Only proceed if there are unassigned comparisons
+  IF existing_count > 0 THEN
+    -- Use advisory lock to prevent race conditions
+    PERFORM pg_advisory_xact_lock(123456789);
+
+    -- Double-check after acquiring lock
+    SELECT COUNT(*) INTO existing_count
+    FROM "comparisons"
+    WHERE "user_id" IS NULL;
+
+    IF existing_count > 0 THEN
+      -- Get the first user's ID
+      first_user_id := NEW.id;
+
+      -- Update all existing comparisons
+      UPDATE "comparisons"
+      SET "user_id" = first_user_id
+      WHERE "user_id" IS NULL;
+
+      -- Record assignments in admin_assignments table
+      INSERT INTO "admin_assignments" ("id", "old_id", "assigned_to", "assigned_at")
+      SELECT
+        gen_random_uuid()::text,
+        "id",
+        first_user_id,
+        now()
+      FROM "comparisons"
+      WHERE "user_id" = first_user_id;
+    END IF;
+  END IF;
+
+  RETURN NEW;
+END;
+$$ LANGUAGE plpgsql;
+
+-- Trigger to automatically assign on first user signup
+CREATE TRIGGER on_first_user_signup
+AFTER INSERT ON "auth"."users"
+FOR EACH ROW
+EXECUTE FUNCTION assign_comparisons_to_first_user();
+```
+
+**Step 4:** Enable Row Level Security policies
+```sql
+-- Enable RLS on comparisons table
+ALTER TABLE "comparisons" ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can only see their own comparisons
+CREATE POLICY "users_can_only_view_own_comparisons"
+ON "comparisons"
+FOR SELECT
+USING (auth.uid() = "user_id");
+
+-- Policy: Users can only insert their own comparisons
+CREATE POLICY "users_can_only_insert_own_comparisons"
+ON "comparisons"
+FOR INSERT
+WITH CHECK (auth.uid() = "user_id");
+
+-- Policy: Users can only update their own comparisons
+CREATE POLICY "users_can_only_update_own_comparisons"
+ON "comparisons"
+FOR UPDATE
+USING (auth.uid() = "user_id");
+
+-- Policy: Users can only delete their own comparisons
+CREATE POLICY "users_can_only_delete_own_comparisons"
+ON "comparisons"
+FOR DELETE
+USING (auth.uid() = "user_id");
+
+-- Enable RLS on admin_assignments table
+ALTER TABLE "admin_assignments" ENABLE ROW LEVEL SECURITY;
+
+-- Policy: Users can only view their own admin assignments
+CREATE POLICY "users_can_only_view_own_admin_assignments"
+ON "admin_assignments"
+FOR SELECT
+USING (auth.uid() = "assigned_to");
+```
+
+**Step 5:** One-time migration script (optional - trigger handles this automatically)
+
+### Phase 5: Optional Manual Migration Script
+
+**Note:** The database trigger created in Step 3 automatically assigns existing comparisons to the first user who signs up. This manual script is only needed if you want to migrate data before deploying or need to reassign data.
 
 **`scripts/migrate-existing-comparisons.ts`:**
 
@@ -348,7 +564,8 @@ export async function migrateExistingComparisons(adminUserId: string) {
 
 ### Phase 6: Enforce Constraints
 
-After first user admin setup:
+After the first user has registered and the database trigger has assigned existing comparisons, enforce the NOT NULL constraint:
+
 ```sql
 -- Make userId NOT NULL
 ALTER TABLE "comparisons"
@@ -362,7 +579,7 @@ ADD CONSTRAINT "comparisons_user_id_fkey"
 ### 1. OAuth Failure
 
 ```typescript
-// src/app/(auth)/auth-callback/route.ts
+// src/app/auth-callback/route.ts
 export async function GET(request: Request) {
   const requestUrl = new URL(request.url)
   const code = requestUrl.searchParams.get('code')
@@ -389,28 +606,14 @@ export async function GET(request: Request) {
 
 ### 3. First User Admin Assignment
 
-```typescript
-// In auth callback or first login check
-const { data: { user } } = await supabase.auth.getUser()
+The first user admin assignment is handled automatically by a database trigger to prevent race conditions. The trigger `on_first_user_signup` fires when a new user is created and:
 
-// Check if user is already admin
-if (!user.user_metadata.is_admin) {
-  // Check if there are existing comparisons
-  const { data: existingComparisons } = await db
-    .select()
-    .from(comparisons)
-    .limit(1)
+1. Checks if there are comparisons without user_id
+2. Uses `pg_advisory_xact_lock` to prevent race conditions
+3. Assigns all unassigned comparisons to the first user
+4. Records the assignment in the `admin_assignments` table
 
-  if (existingComparisons.length > 0) {
-    // This is first user - make them admin
-    await migrateExistingComparisonsToUser(user.id)
-    await supabase.auth.updateUser({
-      id: user.id,
-      user_metadata: { ...user.user_metadata, is_admin: true }
-    })
-  }
-}
-```
+**Note:** The migration script is still available for manual use if needed, but the database trigger handles the automatic first-user assignment safely.
 
 ### 4. User Data Access Control
 
@@ -502,27 +705,30 @@ if (ENABLE_AUTH) {
 
 ## Implementation Order
 
-1. Install dependencies
-2. Configure Supabase Auth dashboard
-3. Add environment variables
-4. Run database migration (nullable user_id)
-5. Implement middleware
-6. Create auth routes group
-7. Update layout with auth provider
-8. Create login page
-9. Update API routes with auth checks
-10. Test auth flow
-11. First user registers (auto-admin)
-12. Run migration script
-13. Enable NOT NULL constraint on user_id
-14. Full testing
+1. Install dependencies (`@supabase/ssr`)
+2. Configure Supabase Auth dashboard (Google + GitHub OAuth)
+3. Add environment variables (OAuth client IDs)
+4. Run database migration:
+   - Add nullable user_id column
+   - Create admin_assignments table
+   - Create database trigger for first-user detection
+   - Enable RLS policies
+5. Implement middleware with route protection
+6. Create login page and auth-callback route
+7. Update root layout with auth provider
+8. Update API routes with auth checks and user_id filtering
+9. Test auth flow (login, logout, session management)
+10. First user registers (auto-admin via trigger)
+11. Enable NOT NULL constraint on user_id
+12. Full testing (data isolation, OAuth providers, RLS)
 
 ## Success Criteria
 
 ✅ All pages require authentication to access
-✅ Users can only see their own comparison data
+✅ Users can only see their own comparison data (app-level + RLS)
 ✅ Google + GitHub + Email login all working
-✅ Existing data preserved and assigned to admin user
+✅ Existing data preserved and assigned to admin user (via trigger)
 ✅ Session management works correctly
 ✅ Logout functionality works
-✅ No data leakage between users
+✅ No data leakage between users (RLS enforced at database level)
+✅ First-user detection handles race conditions safely
