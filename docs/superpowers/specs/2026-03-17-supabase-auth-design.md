@@ -93,6 +93,53 @@ CREATE INDEX "admin_assignments_assigned_to_idx"
 ON "admin_assignments"("assigned_to");
 ```
 
+#### Drizzle Schema TypeScript Definitions
+
+Update `src/lib/db/schema.ts` to include the new fields and tables:
+
+```typescript
+import { pgTable, text, timestamp, index } from 'drizzle-orm/pg-core'
+
+// Update existing comparisons table
+export const comparisons = pgTable('comparisons', {
+  // ... existing fields ...
+  id: text('id').primaryKey(),
+  masterData: text('master_data').notNull(),
+  secondaryData: text('secondary_data').notNull(),
+  comparisonData: text('comparison_data').notNull(),
+  masterColumns: text('master_columns'),
+  secondaryColumns: text('secondary_columns'),
+  totalRows: text('total_rows').notNull(),
+  matchedRows: text('matched_rows').notNull(),
+  unmatchedRows: text('unmatched_rows').notNull(),
+  comparisonMethod: text('comparison_method').notNull(),
+  fuzzyAlgorithm: text('fuzzy_algorithm'),
+  similarityThreshold: text('similarity_threshold'),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+  updatedAt: timestamp('updated_at').defaultNow().notNull(),
+
+  // NEW: User ownership field
+  userId: text('user_id'), // nullable during migration, NOT NULL after
+}, (table) => ({
+  // ... existing indexes ...
+  // NEW: Index for user queries
+  userIdIndex: index('comparisons_user_id_idx').on(table.userId),
+}))
+
+// NEW: Admin assignments tracking table
+export const adminAssignments = pgTable('admin_assignments', {
+  id: text('id').primaryKey(),
+  oldId: text('old_id').notNull(),
+  assignedTo: text('assigned_to').notNull(),
+  assignedAt: timestamp('assigned_at').defaultNow().notNull(),
+}, (table) => ({
+  // Index for querying user's admin assignments
+  assignedToIndex: index('admin_assignments_assigned_to_idx').on(table.assignedTo),
+}))
+```
+
+**Important:** The `userId` field starts as nullable (as shown in the SQL migration) and becomes NOT NULL in Phase 6 after the first user is assigned.
+
 #### Database Function for First User Detection
 
 To handle the race condition where multiple users might register simultaneously, we'll use a database function with proper locking:
@@ -391,11 +438,54 @@ GITHUB_OAUTH_CLIENT_ID=your-github-client-id
 GITHUB_OAUTH_CLIENT_SECRET=your-github-client-secret
 ```
 
+**Environment Variable Validation (Optional):**
+
+To ensure all required environment variables are set at runtime, create `src/lib/env.ts`:
+
+```typescript
+function getRequiredEnv(key: string): string {
+  const value = process.env[key]
+  if (!value) {
+    throw new Error(`Missing required environment variable: ${key}`)
+  }
+  return value
+}
+
+export const env = {
+  supabaseUrl: getRequiredEnv('NEXT_PUBLIC_SUPABASE_URL'),
+  supabaseAnonKey: getRequiredEnv('NEXT_PUBLIC_SUPABASE_ANON_KEY'),
+  googleClientId: getRequiredEnv('NEXT_PUBLIC_GOOGLE_OAUTH_CLIENT_ID'),
+  googleClientSecret: getRequiredEnv('GOOGLE_OAUTH_CLIENT_SECRET'),
+  githubClientId: getRequiredEnv('GITHUB_OAUTH_CLIENT_ID'),
+  githubClientSecret: getRequiredEnv('GITHUB_OAUTH_CLIENT_SECRET'),
+}
+```
+
+Usage in code:
+```typescript
+import { env } from '@/lib/env'
+
+// env.supabaseUrl is guaranteed to be defined
+```
+
 ### Phase 2: Install Dependencies
 
+**Note on Package Migration:**
+The current project uses `@supabase/supabase-js` which is not optimized for Next.js 16 App Router. We will replace it with `@supabase/ssr`, which provides proper Server-Side Rendering support and cookie handling for Next.js.
+
 ```bash
+# Remove old package (if exists)
+npm uninstall @supabase/supabase-js
+
+# Install new SSR-optimized package
 npm install @supabase/ssr
 ```
+
+**Why @supabase/ssr?**
+- Built specifically for Next.js 13+ App Router
+- Proper cookie handling for Server Components and middleware
+- Automatic token refresh
+- Type-safe API for server and client contexts
 
 ### Phase 3: Supabase Dashboard Configuration
 
@@ -535,9 +625,20 @@ USING (auth.uid() = "assigned_to");
 
 ### Phase 5: Optional Manual Migration Script
 
-**Note:** The database trigger created in Step 3 automatically assigns existing comparisons to the first user who signs up. This manual script is only needed if you want to migrate data before deploying or need to reassign data.
+**Note:** The database trigger created in Step 3 automatically assigns existing comparisons to the first user who signs up. This is the **recommended approach** as it:
 
-**Important:** If using this manual migration script, you need to install `@supabase/supabase-js` separately:
+1. Eliminates race conditions through database locking
+2. Requires no manual intervention
+3. Happens automatically when the first user registers
+
+**Manual Script (Alternative):**
+This manual script is only needed if you want to migrate data before deploying or need to reassign data to a different user.
+
+**Important:** If using this manual migration script:
+- The Drizzle schema must already be updated with `userId` and `adminAssignments` tables
+- You need to install `@supabase/supabase-js` separately
+- Run this AFTER the database schema changes are deployed
+
 ```bash
 npm install @supabase/supabase-js
 ```
@@ -594,26 +695,43 @@ ADD CONSTRAINT "comparisons_user_id_fkey"
 
 ## Edge Cases & Error Handling
 
-### 1. OAuth Failure
+### 1. OAuth Callback Handler
+
+**Complete implementation** for `src/app/auth-callback/route.ts`:
 
 ```typescript
-// src/app/auth-callback/route.ts
-export async function GET(request: Request) {
-  const requestUrl = new URL(request.url)
-  const code = requestUrl.searchParams.get('code')
-  const error = requestUrl.searchParams.get('error')
-  const errorDescription = requestUrl.searchParams.get('error_description')
+import { createClient } from '@/lib/supabase/server'
+import { NextResponse } from 'next/server'
 
+export async function GET(request: Request) {
+  const { searchParams } = new URL(request.url)
+  const code = searchParams.get('code')
+  const error = searchParams.get('error')
+  const errorDescription = searchParams.get('error_description')
+
+  // Handle OAuth errors
   if (error) {
     console.error('OAuth error:', error, errorDescription)
     return NextResponse.redirect(
-      `/login?error=${error}&description=${errorDescription}`
+      new URL(`/login?error=${error}&description=${errorDescription}`, request.url)
     )
   }
 
-  // ... rest of callback logic
+  // Exchange authorization code for session
+  if (code) {
+    const supabase = await createClient()
+    await supabase.auth.exchangeCodeForSession(code)
+  }
+
+  // Redirect to home page after successful login
+  return NextResponse.redirect(new URL('/', request.url))
 }
 ```
+
+**Error Handling:**
+- OAuth errors redirect back to `/login` with error details
+- Successful login exchanges the code for a session and redirects to home
+- Session is automatically stored in cookies by Supabase SSR
 
 ### 2. Session Expiry
 
