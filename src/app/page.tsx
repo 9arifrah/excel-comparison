@@ -29,16 +29,16 @@ export default function Home() {
             Excel Data Comparison
           </h1>
           <p className="text-slate-600 dark:text-slate-400 text-xl font-medium mb-8">
-            Bandingkan data Excel dengan mudah & akurat
+            Bandingkan file Excel dengan cepat & akurat
           </p>
           <div className="flex items-center justify-center gap-6">
             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <Zap className="w-5 h-5 text-yellow-500" />
-              <span>Fuzzy Matching Enabled</span>
+              <span>Fuzzy Matching (Jaro-Winkler & Jaccard)</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <CheckCircle className="w-5 h-5 text-green-500" />
-              <span>Support 150.000+ baris</span>
+              <span>Phonetic Index Optimization</span>
             </div>
           </div>
         </div>
@@ -84,7 +84,7 @@ export default function Home() {
                   <div>
                     <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-1">Metode Perbandingan</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Pilih exact match atau fuzzy matching
+                      Pilih exact match atau fuzzy matching (Jaro-Winkler/Jaccard)
                     </p>
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export default function Home() {
                   Fuzzy Matching
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Cocokkan data dengan tingkat kemiripan yang bisa diatur (Jaro-Winkler Algorithm)
+                  Cocokkan data dengan algoritma Jaro-Winkler atau Jaccard, threshold 0-100%
                 </p>
               </div>
             </CardContent>
@@ -181,7 +181,7 @@ export default function Home() {
                   High Performance
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Optimasi dengan phonetic index untuk file hingga 150.000+ baris
+                  Optimasi dengan phonetic index (Metaphone & Soundex) untuk pemrosesan cepat
                 </p>
               </div>
             </CardContent>
@@ -267,7 +267,7 @@ export default function Home() {
                 </div>
                 <h3 className="font-bold text-lg text-slate-700 dark:text-slate-300 mb-3">Setting</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                  Pilih metode: exact match atau fuzzy matching
+                  Pilih metode: exact match atau fuzzy matching (Jaro-Winkler/Jaccard)
                 </p>
                 <div className="flex items-center justify-center gap-1 text-xs text-pink-600 dark:text-pink-400 font-medium">
                   <Zap className="w-3 h-3" />
