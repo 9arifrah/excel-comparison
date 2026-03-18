@@ -63,25 +63,25 @@ ALTER TABLE "comparisons" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users_can_only_view_own_comparisons"
 ON "comparisons"
 FOR SELECT
-USING (auth.uid() = "user_id");
+USING (auth.uid()::text = "user_id");
 
 -- Policy: Users can only insert their own comparisons
 CREATE POLICY "users_can_only_insert_own_comparisons"
 ON "comparisons"
 FOR INSERT
-WITH CHECK (auth.uid() = "user_id");
+WITH CHECK (auth.uid()::text = "user_id");
 
 -- Policy: Users can only update their own comparisons
 CREATE POLICY "users_can_only_update_own_comparisons"
 ON "comparisons"
 FOR UPDATE
-USING (auth.uid() = "user_id");
+USING (auth.uid()::text = "user_id");
 
 -- Policy: Users can only delete their own comparisons
 CREATE POLICY "users_can_only_delete_own_comparisons"
 ON "comparisons"
 FOR DELETE
-USING (auth.uid() = "user_id");
+USING (auth.uid()::text = "user_id");
 
 -- Enable RLS on admin_assignments table
 ALTER TABLE "admin_assignments" ENABLE ROW LEVEL SECURITY;
@@ -90,7 +90,7 @@ ALTER TABLE "admin_assignments" ENABLE ROW LEVEL SECURITY;
 CREATE POLICY "users_can_only_view_own_admin_assignments"
 ON "admin_assignments"
 FOR SELECT
-USING (auth.uid() = "assigned_to");
+USING (auth.uid()::text = "assigned_to");
 
 -- Step 4: Verify all comparisons have userId (for Task 37)
 -- Run this before enforcing NOT NULL constraint:
