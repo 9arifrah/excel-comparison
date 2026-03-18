@@ -35,7 +35,6 @@ interface HistoryItem {
   similarityThreshold?: number
   userId?: string
 }
-}
 
 export default function HistoryScreen() {
   const router = useRouter()
