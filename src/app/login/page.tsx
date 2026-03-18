@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
 import { Card, CardContent } from '@/components/ui/card'
-import { Loader2, FileSpreadsheet, Lock, Mail, User } from 'lucide-react'
+import { Loader2, FileSpreadsheet, Lock, Mail, User, Eye, EyeOff } from 'lucide-react'
 
 type AuthMode = 'signin' | 'signup'
 
@@ -21,6 +21,7 @@ export default function LoginPageV1() {
   const [isEmailLoading, setIsEmailLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
+  const [showPassword, setShowPassword] = useState(false)
   const router = useRouter()
   const searchParams = useSearchParams()
   const supabase = createClient()
@@ -128,6 +129,7 @@ export default function LoginPageV1() {
     setFullName('')
     setEmail('')
     setPassword('')
+    setShowPassword(false)
   }
 
   const isAnyLoading = isGoogleLoading || isGithubLoading || isEmailLoading
@@ -317,15 +319,26 @@ export default function LoginPageV1() {
                   <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
                   <Input
                     id="password"
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     placeholder={mode === 'signin' ? 'Enter your password' : 'Create a password'}
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
                     disabled={isAnyLoading}
                     minLength={6}
-                    className="pl-11 h-11"
+                    className="pl-11 pr-11 h-11"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-1/2 transform -translate-y-1/2 text-slate-400 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
+                  >
+                    {showPassword ? (
+                      <EyeOff className="w-5 h-5" />
+                    ) : (
+                      <Eye className="w-5 h-5" />
+                    )}
+                  </button>
                 </div>
                 {mode === 'signup' && (
                   <p className="text-xs text-slate-500 dark:text-slate-400">
@@ -370,7 +383,7 @@ export default function LoginPageV1() {
         <div className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
           <a href="#" className="hover:text-slate-700 dark:hover:text-slate-300">Privacy Policy</a>
           {' · '}
-          <a href="#" className="hover:text-slate-700 dark:hover:text-slate-300">Terms of Service</a>
+          <a href="#" className="hover:text:text-s700 dark:hover:text-slate-300">Terms of Service</a>
           {' · '}
           <a href="#" className="hover:text-slate-700 dark:hover:text-slate-300">Help Center</a>
         </div>
