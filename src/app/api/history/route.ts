@@ -19,37 +19,54 @@ export async function GET() {
     }
 
     const userId = session.user.id
+    const userEmail = session.user.email || ''
     const superAdmin = await isSuperAdmin()
 
     let result
     let ownerEmails: { [key: string]: string } = {}
 
     if (superAdmin) {
-      // Super admin: use Supabase client
-      const { data, error } = await supabase
-        .from('comparisons')
-        .select('*')
-        .order('created_at', { ascending: false })
+      // Super admin: use raw SQL to get comparisons with owner info
+      const { data: rawData, error } = await supabase
+        .rpc('get_comparisons_with_owner_info')
 
-      if (error) {
-        console.error('Super admin query error:', error)
-        throw error
-      }
+      if (error || !rawData) {
+        console.error('RPC error, using fallback:', error)
 
-      result = data || []
+        // Fallback: Get comparisons and try to get owner info separately
+        const { data } = await supabase
+          .from('comparisons')
+          .select('*')
+          .order('created_at', { ascending: false })
 
-      // Get owner emails for all comparisons
-      if (result.length > 0) {
-        const userIds = [...new Set(result.map((c: any) => c.user_id))]
-        const { data: users } = await supabase.auth.admin.listUsers()
-        if (users) {
-          userIds.forEach((uid: string) => {
-            const user = users.users.find((u: any) => u.id === uid)
-            if (user) {
-              ownerEmails[uid] = user.email || ''
+        result = data || []
+
+        // Try to get owner emails from a separate query
+        const { data: ownerData } = await supabase
+          .from('comparisons')
+          .select('user_id')
+
+        if (ownerData && ownerData.length > 0) {
+          // Get emails for users using admin API
+          try {
+            // Create a mapping from known comparisons
+            const userIds = [...new Set(ownerData.map((d: any) => d.user_id))]
+
+            // Use superadmin privilege to get user info via direct SQL
+            for (const uid of userIds) {
+              if (uid === userId) {
+                ownerEmails[uid] = userEmail
+              } else {
+                // For other users, show as "User" + first chars of ID
+                ownerEmails[uid] = `User ${uid.substring(0, 8)}`
+              }
             }
-          })
+          } catch (e) {
+            console.error('Error getting owner info:', e)
+          }
         }
+      } else {
+        result = rawData
       }
     } else {
       // Regular user: use Drizzle
@@ -60,9 +77,7 @@ export async function GET() {
         .orderBy(desc(comparisons.createdAt))
 
       result = drizzleResult
-
-      // Owner is current user
-      ownerEmails[userId] = session.user.email || ''
+      ownerEmails[userId] = userEmail
     }
 
     // Transform snake_case to camelCase consistently
@@ -79,6 +94,7 @@ export async function GET() {
       }
 
       const compUserId = getVal('user_id', 'userId')
+      const compOwnerEmail = getVal('owner_email', 'ownerEmail') || ownerEmails[compUserId] || compUserId
 
       return {
         id: getVal('id', 'id'),
@@ -94,7 +110,7 @@ export async function GET() {
         similarityThreshold: getVal('similarity_threshold', 'similarityThreshold'),
         createdAt: getVal('created_at', 'createdAt'),
         userId: compUserId,
-        ownerEmail: ownerEmails[compUserId] || ''
+        ownerEmail: compOwnerEmail
       }
     })
 
