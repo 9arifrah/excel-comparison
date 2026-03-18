@@ -34,6 +34,7 @@ interface HistoryItem {
   fuzzyAlgorithm?: 'jaro-winkler' | 'jaccard'
   similarityThreshold?: number
   userId?: string
+  ownerEmail?: string
 }
 
 export default function HistoryScreen() {
@@ -69,7 +70,8 @@ export default function HistoryScreen() {
           comparisonMethod: item.comparisonMethod,
           fuzzyAlgorithm: item.fuzzyAlgorithm,
           similarityThreshold: item.similarityThreshold,
-          userId: item.userId
+          userId: item.userId,
+          ownerEmail: item.ownerEmail
         }))
 
         // Check if user is super admin by seeing if they have data with different userIds
@@ -265,7 +267,7 @@ export default function HistoryScreen() {
                         {isSuperAdmin && item.userId && item.userId !== currentUserId && (
                           <Badge className="bg-amber-500 text-white flex items-center gap-1" variant="secondary">
                             <Shield className="w-3 h-3" />
-                            Other User
+                            {item.ownerEmail || 'Unknown'}
                           </Badge>
                         )}
                         {item.comparisonMethod === 'fuzzy' && (

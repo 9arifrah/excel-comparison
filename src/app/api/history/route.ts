@@ -22,6 +22,7 @@ export async function GET() {
     const superAdmin = await isSuperAdmin()
 
     let result
+    let ownerEmails: { [key: string]: string } = {}
 
     if (superAdmin) {
       // Super admin: use Supabase client
@@ -36,6 +37,20 @@ export async function GET() {
       }
 
       result = data || []
+
+      // Get owner emails for all comparisons
+      if (result.length > 0) {
+        const userIds = [...new Set(result.map((c: any) => c.user_id))]
+        const { data: users } = await supabase.auth.admin.listUsers()
+        if (users) {
+          userIds.forEach((uid: string) => {
+            const user = users.users.find((u: any) => u.id === uid)
+            if (user) {
+              ownerEmails[uid] = user.email || ''
+            }
+          })
+        }
+      }
     } else {
       // Regular user: use Drizzle
       const drizzleResult = await db
@@ -45,6 +60,9 @@ export async function GET() {
         .orderBy(desc(comparisons.createdAt))
 
       result = drizzleResult
+
+      // Owner is current user
+      ownerEmails[userId] = session.user.email || ''
     }
 
     // Transform snake_case to camelCase consistently
@@ -60,6 +78,8 @@ export async function GET() {
         return val
       }
 
+      const compUserId = getVal('user_id', 'userId')
+
       return {
         id: getVal('id', 'id'),
         masterFile: getVal('master_file', 'masterFile'),
@@ -73,7 +93,8 @@ export async function GET() {
         fuzzyAlgorithm: getVal('fuzzy_algorithm', 'fuzzyAlgorithm'),
         similarityThreshold: getVal('similarity_threshold', 'similarityThreshold'),
         createdAt: getVal('created_at', 'createdAt'),
-        userId: getVal('user_id', 'userId')
+        userId: compUserId,
+        ownerEmail: ownerEmails[compUserId] || ''
       }
     })
 
