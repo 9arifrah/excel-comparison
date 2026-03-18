@@ -3,6 +3,7 @@ import { db } from '@/lib/db'
 import { comparisons } from '@/lib/db/schema'
 import { compareExcelFiles } from '@/lib/excel-comparison'
 import { v4 as uuidv4 } from 'uuid'
+import { createClient } from '@/lib/supabase/server'
 
 // HTTP client to communicate with comparison progress service
 // Only enabled in development mode
@@ -31,6 +32,19 @@ async function notifyProgressService(action: string, data: any) {
 
 export async function POST(request: NextRequest) {
   try {
+    // Check authentication
+    const supabase = await createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const userId = session.user.id
+
     const formData = await request.formData()
     const masterFile = formData.get('masterFile') as File
     const secondaryFile = formData.get('secondaryFile') as File
@@ -150,7 +164,8 @@ export async function POST(request: NextRequest) {
       secondaryColumns: JSON.stringify(secondaryColumns),
       comparisonMethod: result.comparisonMethod,
       similarityThreshold: result.similarityThreshold,
-      fuzzyAlgorithm: result.fuzzyAlgorithm
+      fuzzyAlgorithm: result.fuzzyAlgorithm,
+      userId: userId
     }).returning()
 
     // Return result summary
