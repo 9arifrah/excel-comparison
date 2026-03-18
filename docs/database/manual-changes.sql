@@ -47,7 +47,7 @@ BEGIN
 
   RETURN NEW;
 END;
-$$ LANGUAGE plpgsql;
+$$ LANGUAGE plpgsql SET search_path = '';
 
 -- Step 2: Create the trigger
 CREATE TRIGGER on_first_user_signup
