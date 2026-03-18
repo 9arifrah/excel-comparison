@@ -29,16 +29,16 @@ export default function Home() {
             Excel Data Comparison
           </h1>
           <p className="text-slate-600 dark:text-slate-400 text-xl font-medium mb-8">
-            Perbandingan Excel berkinerja tinggi dengan dukungan fuzzy matching
+            Bandingkan data Excel dengan mudah & akurat
           </p>
           <div className="flex items-center justify-center gap-6">
             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <Zap className="w-5 h-5 text-yellow-500" />
-              <span>Fuzzy Matching Diaktifkan</span>
+              <span>Fuzzy Matching Enabled</span>
             </div>
             <div className="flex items-center gap-2 text-sm text-slate-500 dark:text-slate-400">
               <CheckCircle className="w-5 h-5 text-green-500" />
-              <span>Dukungan 150.000+ baris</span>
+              <span>Support 150.000+ baris</span>
             </div>
           </div>
         </div>
@@ -61,7 +61,7 @@ export default function Home() {
                 </span>
               </CardTitle>
               <CardDescription className="text-lg text-slate-600 dark:text-slate-400">
-                Upload dan bandingkan file Excel Anda
+                Upload & bandingkan file Excel
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -73,7 +73,7 @@ export default function Home() {
                   <div>
                     <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-1">Upload File</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Upload file Excel master dan sekunder
+                      Pilih 2 file Excel untuk dibandingkan
                     </p>
                   </div>
                 </div>
@@ -82,7 +82,7 @@ export default function Home() {
                     <Zap className="w-4 h-4 text-purple-600 dark:text-purple-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-1">Konfigurasi Pengaturan</h3>
+                    <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-1">Metode Perbandingan</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
                       Pilih exact match atau fuzzy matching
                     </p>
@@ -91,7 +91,7 @@ export default function Home() {
                 <Button
                   className="w-full bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl transition-all duration-300"
                 >
-                  Mulai Perbandingan
+                  Mulai Bandingkan
                   <ArrowRight className="w-5 h-5 ml-2" />
                 </Button>
               </div>
@@ -114,7 +114,7 @@ export default function Home() {
                 </span>
               </CardTitle>
               <CardDescription className="text-lg text-slate-600 dark:text-slate-400">
-                Akses perbandingan sebelumnya
+                Lihat hasil perbandingan sebelumnya
               </CardDescription>
             </CardHeader>
             <CardContent>
@@ -124,9 +124,9 @@ export default function Home() {
                     <CheckCircle className="w-4 h-4 text-green-600 dark:text-green-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-1">Perbandingan Sebelumnya</h3>
+                    <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-1">History Perbandingan</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Lihat dan analisis hasil sebelumnya
+                      Cek hasil perbandingan yang sudah dilakukan
                     </p>
                   </div>
                 </div>
@@ -135,9 +135,9 @@ export default function Home() {
                     <Zap className="w-4 h-4 text-yellow-600 dark:text-yellow-400" />
                   </div>
                   <div>
-                    <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-1">Akses Cepat</h3>
+                    <h3 className="font-semibold text-slate-700 dark:text-slate-300 mb-1">Quick Access</h3>
                     <p className="text-sm text-slate-500 dark:text-slate-400">
-                      Gunakan ulang pengaturan dan export hasil
+                      Gunakan ulang atau export hasil
                     </p>
                   </div>
                 </div>
@@ -165,7 +165,7 @@ export default function Home() {
                   Fuzzy Matching
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Bandingkan data dengan ambang kemiripan yang dapat dikonfigurasi menggunakan algoritma Jaro-Winkler
+                  Cocokkan data dengan tingkat kemiripan yang bisa diatur (Jaro-Winkler Algorithm)
                 </p>
               </div>
             </CardContent>
@@ -178,10 +178,10 @@ export default function Home() {
                   <Zap className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-bold text-lg text-slate-700 dark:text-slate-300">
-                  Kinerja Tinggi
+                  High Performance
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Dioptimalkan dengan indeks fonetik untuk menangani file dengan 150.000+ baris
+                  Optimasi dengan phonetic index untuk file hingga 150.000+ baris
                 </p>
               </div>
             </CardContent>
@@ -194,10 +194,10 @@ export default function Home() {
                   <BarChart3 className="w-8 h-8 text-white" />
                 </div>
                 <h3 className="font-bold text-lg text-slate-700 dark:text-slate-300">
-                  UX Multi-Layar
+                  Tampilan Step-by-Step
                 </h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400">
-                  Antarmuka step-by-step yang bersih dengan navigasi intuitif
+                  Interface yang bersih & mudah digunakan
                 </p>
               </div>
             </CardContent>
@@ -208,10 +208,10 @@ export default function Home() {
         <div className="mt-20 max-w-5xl mx-auto">
           <div className="text-center mb-12">
             <h2 className="text-4xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent mb-4">
-              Alur Kerja Aplikasi
+              Cara Pakai
             </h2>
             <p className="text-lg text-slate-600 dark:text-slate-400">
-              Ikuti 4 langkah sederhana untuk membandingkan data Excel Anda
+              4 langkah mudah untuk bandingkan data Excel
             </p>
           </div>
           
@@ -225,9 +225,9 @@ export default function Home() {
                 <div className="w-10 h-10 rounded-full bg-blue-100 dark:bg-blue-800 flex items-center justify-center mx-auto mb-4 border-4 border-blue-500">
                   <span className="font-bold text-blue-600 dark:text-blue-400">1</span>
                 </div>
-                <h3 className="font-bold text-lg text-slate-700 dark:text-slate-300 mb-3">Upload File</h3>
+                <h3 className="font-bold text-lg text-slate-700 dark:text-slate-300 mb-3">Upload</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                  Upload file Excel master dan sekunder yang ingin dibandingkan
+                  Pilih 2 file Excel yang mau dibandingkan
                 </p>
                 <div className="flex items-center justify-center gap-1 text-xs text-blue-600 dark:text-blue-400 font-medium">
                   <FileSpreadsheet className="w-3 h-3" />
@@ -247,7 +247,7 @@ export default function Home() {
                 </div>
                 <h3 className="font-bold text-lg text-slate-700 dark:text-slate-300 mb-3">Pilih Kolom</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                  Pilih kolom dari kedua file yang ingin dibandingkan
+                  Tentukan kolom yang mau dicocokkan
                 </p>
                 <div className="flex items-center justify-center gap-1 text-xs text-purple-600 dark:text-purple-400 font-medium">
                   <CheckCircle className="w-3 h-3" />
@@ -265,9 +265,9 @@ export default function Home() {
                 <div className="w-10 h-10 rounded-full bg-pink-100 dark:bg-pink-800 flex items-center justify-center mx-auto mb-4 border-4 border-pink-500">
                   <span className="font-bold text-pink-600 dark:text-pink-400">3</span>
                 </div>
-                <h3 className="font-bold text-lg text-slate-700 dark:text-slate-300 mb-3">Konfigurasi</h3>
+                <h3 className="font-bold text-lg text-slate-700 dark:text-slate-300 mb-3">Setting</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                  Pilih exact match atau fuzzy matching dengan ambang kemiripan yang diinginkan
+                  Pilih metode: exact match atau fuzzy matching
                 </p>
                 <div className="flex items-center justify-center gap-1 text-xs text-pink-600 dark:text-pink-400 font-medium">
                   <Zap className="w-3 h-3" />
@@ -287,7 +287,7 @@ export default function Home() {
                 </div>
                 <h3 className="font-bold text-lg text-slate-700 dark:text-slate-300 mb-3">Lihat Hasil</h3>
                 <p className="text-sm text-slate-500 dark:text-slate-400 mb-4">
-                  Lihat hasil perbandingan, analisis data, dan export ke Excel
+                  Cek hasil & export ke Excel
                 </p>
                 <div className="flex items-center justify-center gap-1 text-xs text-emerald-600 dark:text-emerald-400 font-medium">
                   <BarChart3 className="w-3 h-3" />
