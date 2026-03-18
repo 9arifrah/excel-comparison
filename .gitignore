@@ -53,3 +53,8 @@ test
 prompt
 
 server.log
+
+# credentials
+.github-pat.txt
+*.pat
+*token*
