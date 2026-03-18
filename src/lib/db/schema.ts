@@ -2,7 +2,7 @@ import { pgTable, text, integer, timestamp, index } from 'drizzle-orm/pg-core'
 
 export const comparisons = pgTable('comparisons', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
-  userId: text('user_id'), // NEW: Nullable user ID field for authentication
+  userId: text('user_id').notNull(), // NEW: Non-null user ID field for authentication
   masterFile: text('master_file').notNull(),
   secondaryFile: text('secondary_file').notNull(),
   totalRows: integer('total_rows').notNull(),

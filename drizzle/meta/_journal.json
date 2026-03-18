@@ -15,6 +15,13 @@
       "when": 1773848867986,
       "tag": "0001_noisy_ultimo",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1773854288079,
+      "tag": "0002_giant_black_tarantula",
+      "breakpoints": true
     }
   ]
 }
