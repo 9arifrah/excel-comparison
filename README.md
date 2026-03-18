@@ -1,571 +1,378 @@
-# Excel Comparison - Optimized for Large Files
+# Excel Comparison Tool
 
-A high-performance Excel file comparison tool optimized for processing files with **150,000+ rows** with **fuzzy matching support**.
+A modern Excel file comparison tool with **fuzzy matching support**, **Supabase authentication**, and optimized for processing large files.
 
 ## 🚀 Key Features
 
-### Performance Optimizations
-- **Hash-Based Comparison Algorithm**: O(n+m) complexity instead of O(n*m) - compares 150k+ rows in seconds, not hours
-- **Real-Time Progress Tracking**: WebSocket service provides live updates during comparison
-- **Chunked Processing**: Processes data in batches to handle large datasets efficiently
-- **Pagination**: Results are paginated to prevent browser crashes with large datasets
-- **Phonetic Indexing**: Optimized fuzzy matching using Jaro-Winkler algorithm
+### Authentication & Security
+- 🔐 **Supabase Authentication**: Secure login with OAuth providers
+  - Google OAuth
+  - GitHub OAuth
+  - Email/Password authentication
+- 👤 **User Isolation**: Each user can only access their own comparisons
+- 👑 **Super Admin**: Designated users can view all comparisons across all users
+- 🛡️ **Row Level Security (RLS)**: Database-level security policies
 
 ### Matching Modes
-- ✅ **Exact Match**: Precise matching with case-insensitive comparison and automatic whitespace trimming
-- ✅ **Fuzzy Matching**: Intelligent matching using Jaro-Winkler algorithm with configurable similarity thresholds (50-95%)
-- ✅ **Quick Presets**: Pre-configured thresholds (Strict/High/Medium/Low) for common use cases
-- ✅ **Similarity Scores**: Detailed percentage-based similarity for each comparison
+- ✅ **Exact Match**: Precise matching with case-insensitive comparison
+- ✅ **Fuzzy Matching**: Two algorithm options
+  - **Jaro-Winkler**: Best for names, short strings, small typos (character-level)
+  - **Jaccard**: Best for phrases, sentences, word order variations (word-level)
+- ✅ **Configurable Threshold**: 0-100% similarity threshold
+- ✅ **Quick Presets**: Strict (95%), High (85%), Medium (75%), Low (50%)
+
+### Performance Optimizations
+- **Hash-Based Comparison**: O(n+m) complexity for exact matching
+- **Phonetic Indexing**: Uses Metaphone & Soundex for optimized fuzzy matching
+- **Batch Processing**: Handles large datasets efficiently
 
 ### User Experience
-- 🎨 **Modern UI Design**: Consistent design with gradients, animations, and smooth transitions
-- 📱 **Multi-Screen Workflow**: Intuitive 4-step process (Upload → Select Columns → Settings → Results)
-- 🌐 **Bilingual Support**: English interface with Indonesian explanations
-- 🌙 **Dark Mode**: Full dark mode support throughout the application
-- 📊 **Real-Time Progress**: Visual progress indicators with status updates
-- 📜 **Comparison History**: Persistent storage with ability to view, export, and delete past comparisons
-
-### Core Functionality
-- ✅ Upload and preview two Excel files (.xlsx, .xls)
-- ✅ Select columns for intelligent comparison
-- ✅ Configure comparison method (Exact Match or Fuzzy Matching)
-- ✅ Set custom similarity thresholds (50-95%)
-- ✅ Real-time progress indicators with WebSocket updates
-- ✅ Detailed comparison results with similarity scores
-- ✅ Filter results by match status (All/Matched/Unmatched)
-- ✅ Search across all columns
-- ✅ Export results to Excel with MATCH_STATUS and SIMILARITY_SCORE columns
-- ✅ View comparison history with persistent storage
-- ✅ Delete individual comparisons
-- ✅ Responsive design for desktop and mobile
-
-## 📊 Performance Comparison
-
-### Exact Match (Hash-Based Algorithm)
-
-| File Size | Rows | Original O(n*m) | Optimized O(n+m) |
-|-----------|-------|-------------------|-------------------|
-| Small | 1,000 | ~1 second | ~0.1 seconds |
-| Medium | 10,000 | ~100 seconds | ~0.5 seconds |
-| Large | 100,000 | ~10,000 seconds | ~3 seconds |
-| XL | 150,000+ | ~22,500 seconds | ~5 seconds |
-
-### Fuzzy Match (Jaro-Winkler Algorithm)
-
-| File Size | Rows | Comparison Time | Notes |
-|-----------|-------|----------------|-------|
-| Small | 1,000 | ~0.5 seconds | Phonetic indexing overhead |
-| Medium | 10,000 | ~3 seconds | Similarity calculations |
-| Large | 100,000 | ~15 seconds | Batch processing |
-| XL | 150,000+ | ~25 seconds | Optimized with caching |
-
-**Performance Notes:**
-- Fuzzy matching is slightly slower due to similarity calculations
-- Still maintains O(n+m) complexity with phonetic indexing
-- Caching reduces time for repeated comparisons
-- Phonetic indexing speeds up lookups for large datasets
+- 🎨 **Modern UI**: Gradient design with dark mode support
+- 📱 **Responsive**: Works on desktop and mobile
+- 🌙 **Dark Mode**: Full dark mode support
+- 📜 **Comparison History**: Persistent storage with view/export/delete
+- 🔍 **Search & Filter**: Find specific comparisons easily
+- 📤 **Export Results**: Download to Excel with status columns
 
 ## 🏗️ Architecture
 
 ### Tech Stack
-- **Frontend**: Next.js 15, React 19, TypeScript 5
+- **Frontend**: Next.js 16, React 19, TypeScript 5
+- **Authentication**: Supabase Auth with @supabase/ssr
+- **Database**: Supabase PostgreSQL with Drizzle ORM
 - **Styling**: Tailwind CSS 4, shadcn/ui components
-- **Database**: Drizzle ORM with Supabase PostgreSQL
 - **Excel Processing**: XLSX (SheetJS)
-- **Real-Time**: Socket.IO WebSocket service
-- **Matching Algorithms**:
-  - **Exact Match**: Hash-based O(n+m) algorithm
-  - **Fuzzy Match**: Jaro-Winkler similarity algorithm with phonetic indexing
-- **State Management**: React Hooks (useState, useEffect)
-- **UI Components**: Custom components with consistent design system
-- **Type Safety**: Full TypeScript coverage
+- **Matching Algorithms**: Jaro-Winkler & Jaccard with phonetic indexing
 
 ### Project Structure
 ```
 src/
 ├── app/
-│   ├── page.tsx                    # Main home page (English titles, Indonesian explanations)
-│   ├── layout.tsx                  # Root layout with dark mode support
-│   ├── globals.css                 # Global styles with Tailwind CSS 4
-│   ├── compare/                   # Multi-screen workflow (4-step process)
-│   │   ├── upload/page.tsx        # Step 1: Upload Excel files
-│   │   ├── settings/page.tsx      # Step 3: Configure comparison (Exact/Fuzzy)
-│   │   ├── progress/page.tsx       # Real-time progress tracking
-│   │   └── results/page.tsx       # Step 4: View results with statistics
+│   ├── page.tsx                    # Landing page (authenticated)
+│   ├── layout.tsx                  # Root layout with Supabase client
+│   ├── login/
+│   │   └── page.tsx               # Login page with OAuth options
+│   ├── compare/                   # Multi-screen workflow
+│   │   ├── new/page.tsx           # Step 1: Upload Excel files
+│   │   ├── settings/page.tsx      # Step 2: Configure comparison
+│   │   ├── progress/page.tsx      # Step 3: Real-time progress
+│   │   └── results/page.tsx       # Step 4: View results
 │   ├── history/
 │   │   └── page.tsx               # View/manage comparison history
 │   └── api/                       # RESTful API endpoints
-│       ├── preview/route.ts         # File preview endpoint
-│       ├── compare/route.ts         # Comparison endpoint (Exact + Fuzzy)
-│       ├── comparison/[id]/route.ts # Comparison detail with pagination
-│       ├── export/[id]/route.ts    # Export results to Excel
-│       └── history/route.ts        # History CRUD operations
+│       ├── compare/route.ts       # Comparison endpoint
+│       ├── history/route.ts       # History CRUD with super admin
+│       └── history/[id]/route.ts  # Delete comparison
 ├── components/
 │   ├── ui/                        # shadcn/ui components
-│   └── page-layout/               # Reusable layout components
-│       ├── PageHeader.tsx           # Consistent header with back button
-│       └── StatsCard.tsx            # Statistics card component
+│   ├── layout-header.tsx          # App header with user menu
+│   └── user-menu.tsx              # User dropdown menu
 ├── lib/
-│   ├── db/                       # Drizzle ORM configuration
-│   │   ├── index.ts              # Database client
-│   │   └── schema.ts             # Database schema (with fuzzy fields)
-│   ├── constants/
-│   │   └── design-system.ts       # Design system constants (colors, spacing)
-│   ├── similarity.ts              # Jaro-Winkler fuzzy matching algorithm
-│   ├── excel-comparison.ts        # Optimized comparison logic (Exact + Fuzzy)
-│   └── utils.ts                 # Utility functions
-├── drizzle/                      # Drizzle migrations
-│   ├── 0000_*.sql               # Initial database schema
-│   ├── 0001_add_fuzzy_matching.sql # Fuzzy matching fields
-│   └── meta/                    # Migration metadata
-└── hooks/                        # Custom React hooks
-    ├── use-mobile.ts              # Mobile detection hook
-    └── use-toast.ts             # Toast notification hook
-
-mini-services/
-└── comparison-service/             # WebSocket progress service (port 3003)
-    ├── index.ts                  # Socket.IO server
-    └── package.json              # Service dependencies
+│   ├── supabase/
+│   │   ├── client.ts              # Supabase client (browser)
+│   │   ├── server.ts              # Supabase client (server)
+│   │   └── middleware.ts          # Auth middleware
+│   ├── db/
+│   │   ├── index.ts               # Drizzle client
+│   │   └── schema.ts              # Database schema
+│   ├── similarity.ts              # Jaro-Winkler & Jaccard algorithms
+│   ├── excel-comparison.ts        # Comparison logic
+│   └── super-admin.ts             # Super admin helpers
+└── middleware.ts                  # Next.js middleware for auth
 ```
 
 ## 🎯 How It Works
 
-### Application Workflow (4-Step Process)
+### Authentication Flow
 
-The application follows an intuitive 4-step workflow:
+```
+┌─────────────┐    ┌──────────────┐    ┌─────────────┐
+│ Unauthenticated│ → │ Login Page   │ → │ Authenticated│
+│ User          │    │ (OAuth/Email)│    │ Dashboard   │
+└─────────────┘    └──────────────┘    └─────────────┘
+```
+
+### Application Workflow (4-Step Process)
 
 ```
 ┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
 │   Step 1    │ →  │   Step 2     │ →  │   Step 3    │ →  │   Step 4    │
-│ Upload File  │    │ Select Columns│    │  Settings   │    │   Results   │
+│ Upload File  │    │  Settings    │    │  Progress   │    │   Results   │
 └─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
      ↓                  ↓                  ↓                  ↓
 ┌─────────────┐    ┌──────────────┐    ┌─────────────┐    ┌─────────────┐
-│ Master &    │    │ Choose key   │    │ Exact Match│    │ Statistics │
-│ Secondary   │    │ columns from │    │ or Fuzzy   │    │ Similarity  │
-│ .xlsx/.xls  │    │ both files  │    │ Matching   │    │ Export     │
+│ Master &    │    │ Match Method │    │ Real-time   │    │ Statistics │
+│ Secondary   │    │ Threshold    │    │ Progress    │    │ Export      │
+│ .xlsx/.xls  │    │ Algorithm    │    │ Updates     │    │ History     │
 └─────────────┘    └──────────────┘    └─────────────┘    └─────────────┘
 ```
 
-**Step 1 - Upload File**: Upload master and secondary Excel files (.xlsx, .xls)
-**Step 2 - Select Columns**: Choose columns from each file for comparison
-**Step 3 - Settings**: Configure comparison method and similarity threshold
-**Step 4 - Results**: View detailed results with similarity scores and statistics
+### Fuzzy Matching Algorithms
 
-### Fuzzy Matching Algorithm
+#### Jaro-Winkler Algorithm
+**Best for**: Names, addresses, codes, short text with small typos
 
-For intelligent data matching, we use the **Jaro-Winkler** algorithm:
+- Compares characters at the character level
+- Gives extra weight to matching prefixes
+- Works well with spelling variations
 
-**How Jaro-Winkler Works**:
-1. **Character Matching**: Find matching characters between two strings
-2. **Transposition Check**: Account for characters out of order
-3. **Jaro Distance**: Calculate similarity score (0-1)
-4. **Winkler Modification**: Boost score for matching prefixes
-5. **Final Score**: Convert to percentage (0-100%)
-
-**Example**:
+Example:
 ```
-"Arifrah" vs "Arifra"
-- Jaro score: 0.92
-- Winkler boost: +0.04 (matching prefix)
-- Final similarity: 96%
+"Arifrah" vs "Arifra" → 96% similarity
+"Jakarta" vs "Djakarta" → 93% similarity
 ```
 
-**Optimizations for Large Files**:
-- **Phonetic Indexing**: Pre-calculate soundex/metaphone for faster matching
-- **Caching**: Store similarity scores for repeated comparisons
-- **Batch Processing**: Calculate similarities in chunks for memory efficiency
+#### Jaccard Algorithm
+**Best for**: Product descriptions, titles, sentences with word order variations
 
-### Hash-Based Comparison Algorithm (Exact Match)
+- Compares words at the word level
+- Uses word tokenization and set operations
+- Handles word reordering well
 
-The secret to handling 150k+ rows is our optimized comparison algorithm:
-
-**Traditional Approach (O(n*m))**:
+Example:
 ```
-For each secondary row (150,000):
-  For each master row (150,000):
-    Compare selected columns
-Total: 22.5 billion comparisons
+"Blue Shirt Large" vs "Large Blue Shirt" → 100% similarity
+"Product Description A" vs "Description Product A" → 100% similarity
 ```
 
-**Our Optimized Approach (O(n+m))**:
-```
-1. Build hash index of master data:
-   For each master row (150,000):
-     Generate hash key from selected columns
-     Store in Map: hashKey -> rowData
+### Phonetic Indexing
 
-2. Compare secondary data against index:
-   For each secondary row (150,000):
-     Generate hash key
-     Look up in Map (O(1) operation)
-Total: 300,000 operations + 150,000 lookups
-```
+For performance optimization, we use:
+- **Metaphone**: Encodes words based on pronunciation
+- **Soundex**: Encodes words using phonetic algorithm
 
-### Real-Time Progress Tracking
-
-For large files, users see real-time progress via WebSocket:
-
-1. **Parsing**: Reading Excel files
-2. **Building Index**: Creating hash lookup table
-3. **Comparing**: Processing rows against index
-4. **Complete**: Results ready
-
-### Pagination
-
-Large datasets (150k+ rows) are paginated to prevent browser crashes:
-- Default: 50 rows per page
-- Configurable via API parameters
-- Filterable by match status (all/matched/unmatched)
+This creates a pre-filter to quickly eliminate obvious non-matches before running the full similarity calculation.
 
 ## 🚀 Getting Started
 
 ### Prerequisites
-- Node.js 18+ (Bun also works)
+- Node.js 18+
+- Supabase account and project
 - Git (optional)
 
 ### Installation
 
-1. **Install dependencies**:
+1. **Clone the repository**:
+```bash
+git clone <your-repo-url>
+cd excel-comparison
+```
+
+2. **Install dependencies**:
 ```bash
 npm install
 # or with bun
 bun install
 ```
 
-2. **Set up database**:
+3. **Set up Supabase**:
 ```bash
-# Create database table
-node scripts/create-table.js
+# Create a new project at https://supabase.com
+# Get your project URL and anon key from Settings → API
+```
 
-# Or use Drizzle (requires psql installed)
+4. **Configure environment variables**:
+```bash
+# Create .env.local file
+cp .env.example .env.local
+
+# Edit with your Supabase credentials:
+NEXT_PUBLIC_SUPABASE_URL=your-project-url
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
+```
+
+5. **Set up database**:
+```bash
+# Run database migrations
 npm run db:push
+
+# Or use Drizzle Studio
+npm run db:studio
+```
+
+6. **Configure OAuth providers** (in Supabase Dashboard):
+- Go to Authentication → Providers
+- Enable Google OAuth
+- Enable GitHub OAuth
+- Add your redirect URLs
+
+7. **Create super admin** (optional):
+```sql
+-- Insert user ID into super_admins table
+INSERT INTO super_admins (user_id)
+VALUES ('<user-uuid-from-auth-users-table>');
 ```
 
 ### Development
 
-**Start both servers (Next.js + WebSocket):**
+**Start development server**:
 ```bash
 npm run dev
 ```
-This command automatically starts:
-- ✅ Next.js development server on port 3000
-- ✅ WebSocket progress service on port 3003
-- ✅ HTTP API for progress on port 3004
 
-Two terminal windows will open automatically:
-- "Next.js" window - Shows Next.js logs
-- "WebSocket" window - Shows Socket.IO logs
+Navigate to [http://localhost:3000](http://localhost:3000)
 
-**Stop all servers:**
-```bash
-npm run stop
-```
-This command terminates all Node.js processes on your machine.
-
-**Run servers separately:**
-```bash
-# Next.js only
-npm run dev:web
-
-# WebSocket service only
-npm run dev:sockets
-```
-
-**Open application:**
-Navigate to [http://localhost:3000](http://localhost:3000) after starting the development server.
-
-### Available Scripts
-
+**Available Scripts**:
 | Command | Description |
 |---------|-------------|
-| `npm run dev` | Start Next.js + WebSocket servers |
-| `npm run stop` | Stop all Node.js processes |
-| `npm run dev:web` | Start only Next.js server (port 3000) |
-| `npm run dev:sockets` | Start only WebSocket service (port 3003) |
+| `npm run dev` | Start Next.js dev server |
 | `npm run build` | Build for production |
 | `npm run start` | Start production server |
 | `npm run lint` | Run ESLint |
 | `npm run db:generate` | Generate Drizzle migration |
 | `npm run db:push` | Push schema to database |
-| `npm run db:migrate` | Run database migrations |
 | `npm run db:studio` | Open Drizzle Studio |
 
 ## 💡 Usage
 
-### Comparing Files (4-Step Process)
+### First Time Login
+
+1. Navigate to the application
+2. You'll be redirected to the login page
+3. Choose your login method:
+   - **Continue with Google**: Quick OAuth login
+   - **Continue with GitHub**: Quick OAuth login
+   - **Email**: Sign up with email and password
+4. After successful login, you'll see the main dashboard
+
+### Creating a Comparison
 
 **Step 1 - Upload Files**:
-   - Click "New Comparison" on the home page
-   - Upload master file (your reference data)
-   - Upload secondary file (data to compare)
-   - Supported formats: .xlsx, .xls
-   - Preview files to verify data before proceeding
+- Click "New Comparison" on the home page
+- Upload master file (your reference data)
+- Upload secondary file (data to compare)
+- Supported formats: .xlsx, .xls
 
 **Step 2 - Select Columns**:
-   - Choose columns from master file for comparison
-   - Choose columns from secondary file for comparison
-   - At least one column from each file is required
-   - Multiple columns can be selected for composite keys
-   - Click "Continue to Settings" when done
+- Choose columns from each file for comparison
+- At least one column from each file is required
 
 **Step 3 - Configure Settings**:
-   - **Choose Comparison Method**:
-     - **Exact Match**: Precise matching (default)
-     - **Fuzzy Matching**: Intelligent matching with similarity scores
-   - **If Fuzzy Matching is enabled**:
-     - **Similarity Threshold**: Set minimum similarity percentage (50-95%)
-     - **Quick Presets**: 
-       - Strict (95%+): For critical data
-       - High (85%+): For general use (recommended)
-       - Medium (75%+): For moderate variations
-       - Low (50%+): For loose matching
-   - Click "Start Comparison" to begin
+- **Matching Mode**: Exact Match or Fuzzy Matching
+- **If Fuzzy Matching**:
+  - Choose Algorithm: Jaro-Winkler or Jaccard
+  - Set Similarity Threshold: 0-100%
+  - Use Quick Presets: Strict (95%), High (85%), Medium (75%), Low (50%)
+- Click "Start Comparison"
 
 **Step 4 - View Results**:
-   - **Overview Statistics**:
-     - Total rows processed
-     - Matched/Unmatched counts
-     - Match rate percentage
-   - **Detailed Results Table**:
-     - Row-by-row comparison details
-     - Similarity scores (for fuzzy matching)
-     - MATCH_STATUS column (MATCHED/UNMATCHED)
-     - SIMILARITY_SCORE column (percentage)
-   - **Filter & Search**:
-     - Filter by status: All, Matched, Unmatched
-     - Search across all columns
-     - Customize rows per page (10, 25, 50, 100)
-   - **Export**:
-     - Download results as Excel file
-     - Includes MATCH_STATUS and SIMILARITY_SCORE columns
-   - **Actions**:
-     - View History: Access past comparisons
-     - New Comparison: Start fresh comparison
+- Overview statistics (total, matched, unmatched)
+- Detailed results with similarity scores
+- Filter by status (All/Matched/Unmatched)
+- Export to Excel
 
-### History Management
+### Managing History
 
-1. **View History**: Click "History" tab
-2. **View Details**: Click "View" to see past comparison results
-3. **Export**: Download results from history
-4. **Delete**: Remove old comparisons
+- Click "View History" to see all past comparisons
+- View detailed results of any comparison
+- Export results to Excel
+- Delete old comparisons
 
-## 🔧 Optimization Details
+**Super Admin Feature**:
+- Super admins see all comparisons from all users
+- Owner email is displayed for each comparison
+- Filter and search across all data
 
-### Memory Management
+## 🔧 Configuration
 
-- **Chunked Processing**: Large files processed in batches
-- **Streaming**: File reading uses streams to avoid loading entire file into memory
-- **Lazy Loading**: Comparison details loaded on demand with pagination
+### Supabase Setup
 
-### Algorithm Optimization
+1. **Create Project**:
+   - Go to [supabase.com](https://supabase.com)
+   - Create a new project
+   - Note your project URL and anon key
 
-- **Hash Keys**: Composite keys from selected columns for O(1) lookups
-- **Case Insensitivity**: Automatic lowercase conversion for matching
-- **Whitespace Trimming**: Automatic trim to eliminate false negatives
-- **Map Data Structure**: JavaScript Map for fastest key-value lookups
+2. **Enable OAuth Providers**:
+   - Go to Authentication → Providers
+   - Enable Google
+   - Enable GitHub
+   - Configure redirect URLs
 
-### WebSocket Service
+3. **Create Database Tables**:
+   - Run migrations with `npm run db:push`
+   - Tables: `comparisons`, `super_admins`
 
-Separate WebSocket service (port 3003) handles:
-- Progress updates
-- Multiple concurrent comparisons
-- Automatic cleanup of old jobs
+4. **Set Up RLS Policies**:
+   - Comparisons: Users can only access their own data
+   - Super admins: Bypass RLS to access all data
 
-## 📈 Performance Tuning
+### Environment Variables
 
-### For Very Large Files (500k+ rows)
-
-1. **Increase Node.js memory**:
-```bash
-NODE_OPTIONS="--max-old-space-size=4096" bun run dev
+Create `.env.local`:
+```env
+NEXT_PUBLIC_SUPABASE_URL=https://your-project.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key
 ```
 
-2. **Adjust chunk size** in `excel-comparison.ts`:
-```typescript
-const chunkSize = 20000 // Increase from 10000
+## 📊 Database Schema
+
+### Comparisons Table
+```sql
+comparisons (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL,           -- Owner of the comparison
+  master_file TEXT NOT NULL,
+  secondary_file TEXT NOT NULL,
+  total_rows INTEGER NOT NULL,
+  matched_rows INTEGER NOT NULL,
+  unmatched_rows INTEGER NOT NULL,
+  master_data TEXT NOT NULL,        -- JSON string
+  secondary_data TEXT NOT NULL,     -- JSON string
+  comparison_data TEXT NOT NULL,    -- JSON string
+  master_columns TEXT,              -- JSON array
+  secondary_columns TEXT,           -- JSON array
+  comparison_method TEXT DEFAULT 'exact',
+  fuzzy_algorithm TEXT DEFAULT 'jaro-winkler',
+  similarity_threshold INTEGER,
+  created_at TIMESTAMP DEFAULT NOW(),
+  updated_at TIMESTAMP DEFAULT NOW()
+)
 ```
 
-3. **Use pagination** in API calls:
-```typescript
-fetch(`/api/comparison/${id}?page=1&limit=100`)
-```
-
-### For Concurrent Comparisons
-
-WebSocket service supports multiple simultaneous jobs:
-- Each comparison gets unique job ID
-- Clients subscribe to specific job rooms
-- Automatic cleanup after 5 minutes
-
-## 🔍 Troubleshooting
-
-### Servers Won't Start
-
-**Problem**: `npm run dev` doesn't start servers
-**Solution**:
-```bash
-# Check if ports are already in use
-netstat -ano | findstr :3000
-netstat -ano | findstr :3003
-
-# Kill processes using the ports
-taskkill /PID <PID> /F
-# Or simply run
-npm run stop
-```
-
-### WebSocket Connection Failed
-
-**Problem**: Progress bar doesn't update
-**Solution**:
-```bash
-# Verify WebSocket service is running
-# Check port 3003
-Test-NetConnection -ComputerName localhost -Port 3003
-
-# Restart development
-npm run stop
-npm run dev
-```
-
-### Out of Memory Errors
-
-**Problem**: Comparison fails with memory error
-**Solution**:
-- Increase Node.js heap size: `NODE_OPTIONS="--max-old-space-size=4096" npm run dev`
-- Process smaller chunks of data
-- Restart dev server periodically
-
-### Large File Upload Timeout
-
-**Problem**: Large files timeout during upload
-**Solution**:
-- Increase Next.js timeout in `next.config.ts`
-- Use compression middleware
-- Process files in smaller batches
-
-### Cannot Stop Servers
-
-**Problem**: Servers won't stop with `npm run stop`
-**Solution**:
-```bash
-# Manually kill Node.js processes
-taskkill /F /IM node.exe
-
-# Or use Task Manager (Ctrl+Shift+Esc)
-# Find node.exe processes → End Task
-```
-
-## 🎓 API Documentation
-
-### Preview File
-```
-POST /api/preview
-Content-Type: multipart/form-data
-
-Body:
-- file: Excel file (.xlsx or .xls)
-- type: "master" or "secondary"
-```
-
-### Compare Files
-```
-POST /api/compare
-Content-Type: multipart/form-data
-
-Body:
-- masterFile: Excel file (.xlsx or .xls)
-- secondaryFile: Excel file (.xlsx or .xls)
-- masterColumns: JSON array of column names (required)
-- secondaryColumns: JSON array of column names (required)
-- comparisonMethod: "exact" | "fuzzy" (optional, default: "exact")
-- similarityThreshold: number 0-100 (optional, default: 85, only for fuzzy matching)
-
-Response:
-{
-  "id": "comparison-id",
-  "status": "processing",
-  "message": "Comparison started"
-}
-```
-
-### Get Comparison Progress (WebSocket)
-```
-Connect to: ws://localhost:3003
-
-Subscribe to room:
-{
-  "event": "join",
-  "jobId": "comparison-id"
-}
-
-Progress updates:
-{
-  "event": "progress",
-  "jobId": "comparison-id",
-  "stage": "parsing|indexing|comparing|complete",
-  "percentage": 0-100,
-  "message": "Processing row 1000 of 50000"
-}
-```
-
-### Get Comparison Detail
-```
-GET /api/comparison/[id]?page=1&limit=50&filter=all
-
-Query Params:
-- page: Page number (default: 1)
-- limit: Rows per page (default: 50)
-- filter: all|matched|unmatched
-```
-
-### Export Results
-```
-GET /api/export/[id]
-
-Returns: Excel file download
-```
-
-### Get History
-```
-GET /api/history
-
-Returns: Array of comparison summaries
-```
-
-### Delete Comparison
-```
-DELETE /api/history/[id]
+### Super Admins Table
+```sql
+super_admins (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  user_id UUID NOT NULL UNIQUE,     -- References auth.users(id)
+  created_at TIMESTAMP DEFAULT NOW()
+)
 ```
 
 ## 🔒 Security
 
-- File type validation (.xlsx, .xls only)
-- Drizzle ORM prevents SQL injection with parameterized queries
-- Input validation on all endpoints
-- No sensitive data stored
-- Environment variables for database credentials
-- Local processing only (no external APIs)
+- **Supabase Auth**: Secure authentication with OAuth
+- **Row Level Security**: Database-level access control
+- **Input Validation**: All inputs are validated
+- **SQL Injection Prevention**: Drizzle ORM with parameterized queries
+- **Environment Variables**: Sensitive data in env files
 
-## 🚧 Development
+## 🔍 Troubleshooting
 
-### Adding Features
+### OAuth Login Not Working
 
-1. Modify API routes in `src/app/api/`
-2. Update frontend in `src/app/page.tsx`
-3. Test with sample files
-4. Update documentation
+**Problem**: Google/GitHub login fails
+**Solution**:
+1. Check Supabase Dashboard → Authentication → Providers
+2. Verify the provider is enabled
+3. Check redirect URLs in provider settings
+4. Ensure your environment variables are correct
 
-### Running Tests
+### Super Admin Cannot See All Data
 
-```bash
-# Run linter
-bun run lint
+**Problem**: Super admin only sees own comparisons
+**Solution**:
+1. Verify user is in `super_admins` table
+2. Check RLS policies on `comparisons` table
+3. Ensure `get_comparisons_with_owner_info()` function exists
 
-# Check TypeScript
-tsc --noEmit
-```
+### Database Connection Issues
+
+**Problem**: Cannot connect to Supabase
+**Solution**:
+1. Verify `NEXT_PUBLIC_SUPABASE_URL` is correct
+2. Check `NEXT_PUBLIC_SUPABASE_ANON_KEY` is valid
+3. Ensure Supabase project is active (not paused)
+4. Check browser console for specific errors
 
 ## 📝 License
 
@@ -579,14 +386,6 @@ Contributions welcome! Please:
 3. Make your changes
 4. Submit a pull request
 
-## 📞 Support
-
-For issues and questions:
-- Check the troubleshooting section
-- Review API documentation
-- Check browser console for errors
-- View dev server logs: `tail -f dev.log`
-
 ---
 
-**Built with ❤️ for performance at scale**
+**Built with ❤️ using Next.js and Supabase**
