@@ -16,7 +16,9 @@ export default function LoginPageV1() {
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [fullName, setFullName] = useState('')
-  const [loading, setLoading] = useState(false)
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false)
+  const [isGithubLoading, setIsGithubLoading] = useState(false)
+  const [isEmailLoading, setIsEmailLoading] = useState(false)
   const [error, setError] = useState('')
   const [successMessage, setSuccessMessage] = useState('')
   const router = useRouter()
@@ -32,7 +34,7 @@ export default function LoginPageV1() {
 
   const handleEmailLogin = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setIsEmailLoading(true)
     setError('')
     setSuccessMessage('')
 
@@ -43,7 +45,7 @@ export default function LoginPageV1() {
 
     if (error) {
       setError(error.message)
-      setLoading(false)
+      setIsEmailLoading(false)
       return
     }
 
@@ -53,7 +55,7 @@ export default function LoginPageV1() {
 
   const handleEmailSignup = async (e: React.FormEvent) => {
     e.preventDefault()
-    setLoading(true)
+    setIsEmailLoading(true)
     setError('')
     setSuccessMessage('')
 
@@ -69,13 +71,13 @@ export default function LoginPageV1() {
 
     if (error) {
       setError(error.message)
-      setLoading(false)
+      setIsEmailLoading(false)
       return
     }
 
     if (data.user && !data.session) {
       setSuccessMessage('Account created! Please check your email to confirm your account.')
-      setLoading(false)
+      setIsEmailLoading(false)
       return
     }
 
@@ -86,7 +88,7 @@ export default function LoginPageV1() {
   }
 
   const handleGoogleAuth = async () => {
-    setLoading(true)
+    setIsGoogleLoading(true)
     setError('')
 
     const { error } = await supabase.auth.signInWithOAuth({
@@ -98,12 +100,12 @@ export default function LoginPageV1() {
 
     if (error) {
       setError(error.message)
-      setLoading(false)
+      setIsGoogleLoading(false)
     }
   }
 
   const handleGithubAuth = async () => {
-    setLoading(true)
+    setIsGithubLoading(true)
     setError('')
 
     const { error } = await supabase.auth.signInWithOAuth({
@@ -115,7 +117,7 @@ export default function LoginPageV1() {
 
     if (error) {
       setError(error.message)
-      setLoading(false)
+      setIsGithubLoading(false)
     }
   }
 
@@ -127,6 +129,8 @@ export default function LoginPageV1() {
     setEmail('')
     setPassword('')
   }
+
+  const isAnyLoading = isGoogleLoading || isGithubLoading || isEmailLoading
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950 flex items-center justify-center p-8">
@@ -147,6 +151,7 @@ export default function LoginPageV1() {
             <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-8">
               <button
                 onClick={() => switchMode('signin')}
+                disabled={isAnyLoading}
                 className={`flex-1 py-3 px-4 rounded-lg font-semibold text-sm transition-all ${
                   mode === 'signin'
                     ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
@@ -157,6 +162,7 @@ export default function LoginPageV1() {
               </button>
               <button
                 onClick={() => switchMode('signup')}
+                disabled={isAnyLoading}
                 className={`flex-1 py-3 px-4 rounded-lg font-semibold text-sm transition-all ${
                   mode === 'signup'
                     ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
@@ -183,11 +189,11 @@ export default function LoginPageV1() {
             <div className="space-y-3 mb-6">
               <Button
                 onClick={handleGoogleAuth}
-                disabled={loading}
+                disabled={isGoogleLoading || isGithubLoading || isEmailLoading}
                 variant="outline"
                 className="w-full h-11 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
-                {loading ? (
+                {isGoogleLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <svg className="mr-2 h-4 w-4" viewBox="0 0 24 24">
@@ -213,11 +219,11 @@ export default function LoginPageV1() {
               </Button>
               <Button
                 onClick={handleGithubAuth}
-                disabled={loading}
+                disabled={isGithubLoading || isGoogleLoading || isEmailLoading}
                 variant="outline"
                 className="w-full h-11 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
-                {loading ? (
+                {isGithubLoading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                 ) : (
                   <svg className="mr-2 h-4 w-4" fill="currentColor" viewBox="0 0 24 24">
@@ -270,7 +276,7 @@ export default function LoginPageV1() {
                       value={fullName}
                       onChange={(e) => setFullName(e.target.value)}
                       required={mode === 'signup'}
-                      disabled={loading}
+                      disabled={isAnyLoading}
                       className="pl-11 h-11"
                     />
                   </div>
@@ -290,7 +296,7 @@ export default function LoginPageV1() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    disabled={loading}
+                    disabled={isAnyLoading}
                     className="pl-11 h-11"
                   />
                 </div>
@@ -316,7 +322,7 @@ export default function LoginPageV1() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    disabled={loading}
+                    disabled={isAnyLoading}
                     minLength={6}
                     className="pl-11 h-11"
                   />
@@ -331,9 +337,9 @@ export default function LoginPageV1() {
               <Button
                 type="submit"
                 className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold"
-                disabled={loading}
+                disabled={isAnyLoading}
               >
-                {loading ? (
+                {isEmailLoading ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     {mode === 'signin' ? 'Signing in...' : 'Creating account...'}
