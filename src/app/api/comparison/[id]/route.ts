@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { comparisons } from '@/lib/db/schema'
 import { eq } from 'drizzle-orm'
+import { createClient } from '@/lib/supabase/server'
 
 export async function GET(
   request: NextRequest,
@@ -9,6 +10,19 @@ export async function GET(
 ) {
   try {
     const { id } = await params
+
+    // Check authentication
+    const supabase = await createClient()
+    const { data: { session } } = await supabase.auth.getSession()
+
+    if (!session?.user) {
+      return NextResponse.json(
+        { error: 'Authentication required' },
+        { status: 401 }
+      )
+    }
+
+    const userId = session.user.id
 
     // Parse query parameters for pagination
     const searchParams = request.nextUrl.searchParams
@@ -27,6 +41,14 @@ export async function GET(
 
     if (!comparison) {
       return NextResponse.json({ error: 'Comparison not found' }, { status: 404 })
+    }
+
+    // Check ownership
+    if (comparison.userId !== userId) {
+      return NextResponse.json(
+        { error: 'You do not have permission to view this comparison' },
+        { status: 403 }
+      )
     }
 
     // Parse comparison data
