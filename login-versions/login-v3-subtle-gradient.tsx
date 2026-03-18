@@ -11,7 +11,7 @@ import { Loader2, FileSpreadsheet, Lock, Mail, User } from 'lucide-react'
 
 type AuthMode = 'signin' | 'signup'
 
-export default function LoginPageV1() {
+export default function LoginPageV3() {
   const [mode, setMode] = useState<AuthMode>('signin')
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -129,25 +129,29 @@ export default function LoginPageV1() {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-100 via-blue-50 to-purple-50 dark:from-slate-950 dark:via-slate-900 dark:to-purple-950 flex items-center justify-center p-8">
+    <div className="min-h-screen bg-gradient-to-br from-slate-50 via-slate-100 to-slate-50 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 flex items-center justify-center p-8">
       <div className="w-full max-w-md">
-        {/* Logo */}
-        <div className="flex items-center justify-center gap-3 mb-8">
-          <div className="w-12 h-12 rounded-xl bg-gradient-to-r from-blue-600 to-purple-600 flex items-center justify-center shadow-lg">
-            <FileSpreadsheet className="w-7 h-7 text-white" />
+        {/* Card Container */}
+        <div className="bg-white dark:bg-slate-900 rounded-2xl shadow-xl border border-slate-200 dark:border-slate-800 overflow-hidden">
+          {/* Header with Gradient Accent */}
+          <div className="bg-gradient-to-r from-blue-600 to-purple-600 px-8 py-6">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <FileSpreadsheet className="w-7 h-7 text-white" />
+              </div>
+              <div>
+                <h1 className="text-2xl font-bold text-white">Excel Comparison</h1>
+                <p className="text-white/80 text-sm">Data comparison platform</p>
+              </div>
+            </div>
           </div>
-          <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 via-purple-600 to-pink-600 bg-clip-text text-transparent">
-            Excel Comparison
-          </span>
-        </div>
 
-        <Card className="border-0 shadow-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-xl">
-          <CardContent className="p-8">
+          <div className="p-8">
             {/* Tab Switcher */}
-            <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-8">
+            <div className="flex gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl mb-6">
               <button
                 onClick={() => switchMode('signin')}
-                className={`flex-1 py-3 px-4 rounded-lg font-semibold text-sm transition-all ${
+                className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
                   mode === 'signin'
                     ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300'
@@ -157,7 +161,7 @@ export default function LoginPageV1() {
               </button>
               <button
                 onClick={() => switchMode('signup')}
-                className={`flex-1 py-3 px-4 rounded-lg font-semibold text-sm transition-all ${
+                className={`flex-1 py-2.5 px-4 rounded-lg font-medium text-sm transition-all ${
                   mode === 'signup'
                     ? 'bg-white dark:bg-slate-700 text-blue-600 dark:text-blue-400 shadow-sm'
                     : 'text-slate-600 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-300'
@@ -168,13 +172,13 @@ export default function LoginPageV1() {
             </div>
 
             {/* Title */}
-            <div className="mb-8">
-              <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100 mb-2">
+            <div className="mb-6">
+              <h2 className="text-xl font-semibold text-slate-800 dark:text-slate-100 mb-1">
                 {mode === 'signin' ? 'Welcome back' : 'Create your account'}
               </h2>
-              <p className="text-slate-500 dark:text-slate-400">
+              <p className="text-sm text-slate-500 dark:text-slate-400">
                 {mode === 'signin'
-                  ? 'Enter your credentials to access your account'
+                  ? 'Sign in to access your workspace'
                   : 'Start comparing your Excel data today'}
               </p>
             </div>
@@ -185,7 +189,7 @@ export default function LoginPageV1() {
                 onClick={handleGoogleAuth}
                 disabled={loading}
                 variant="outline"
-                className="w-full h-11 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                className="w-full h-10 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -215,7 +219,7 @@ export default function LoginPageV1() {
                 onClick={handleGithubAuth}
                 disabled={loading}
                 variant="outline"
-                className="w-full h-11 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
+                className="w-full h-10 border-slate-200 dark:border-slate-700 hover:bg-slate-50 dark:hover:bg-slate-800"
               >
                 {loading ? (
                   <Loader2 className="mr-2 h-4 w-4 animate-spin" />
@@ -242,14 +246,14 @@ export default function LoginPageV1() {
 
             {/* Error Message */}
             {error && (
-              <div className="mb-6 p-4 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-xl">
+              <div className="mb-6 p-3 bg-red-50 dark:bg-red-900/10 border border-red-200 dark:border-red-800 rounded-lg">
                 <p className="text-sm text-red-700 dark:text-red-400">{error}</p>
               </div>
             )}
 
             {/* Success Message */}
             {successMessage && (
-              <div className="mb-6 p-4 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-xl">
+              <div className="mb-6 p-3 bg-green-50 dark:bg-green-900/10 border border-green-200 dark:border-green-800 rounded-lg">
                 <p className="text-sm text-green-700 dark:text-green-400">{successMessage}</p>
               </div>
             )}
@@ -257,12 +261,12 @@ export default function LoginPageV1() {
             {/* Auth Form */}
             <form onSubmit={mode === 'signin' ? handleEmailLogin : handleEmailSignup} className="space-y-4">
               {mode === 'signup' && (
-                <div className="space-y-2">
+                <div className="space-y-1">
                   <Label htmlFor="fullName" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Full Name
                   </Label>
                   <div className="relative">
-                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                    <User className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                     <Input
                       id="fullName"
                       type="text"
@@ -271,18 +275,18 @@ export default function LoginPageV1() {
                       onChange={(e) => setFullName(e.target.value)}
                       required={mode === 'signup'}
                       disabled={loading}
-                      className="pl-11 h-11"
+                      className="pl-10 h-10"
                     />
                   </div>
                 </div>
               )}
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <Label htmlFor="email" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                   Email
                 </Label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     id="email"
                     type="email"
@@ -291,24 +295,24 @@ export default function LoginPageV1() {
                     onChange={(e) => setEmail(e.target.value)}
                     required
                     disabled={loading}
-                    className="pl-11 h-11"
+                    className="pl-10 h-10"
                   />
                 </div>
               </div>
 
-              <div className="space-y-2">
+              <div className="space-y-1">
                 <div className="flex items-center justify-between">
                   <Label htmlFor="password" className="text-sm font-medium text-slate-700 dark:text-slate-300">
                     Password
                   </Label>
                   {mode === 'signin' && (
-                    <a href="#" className="text-sm text-blue-600 dark:text-blue-400 hover:underline">
+                    <a href="#" className="text-xs text-blue-600 dark:text-blue-400 hover:underline">
                       Forgot password?
                     </a>
                   )}
                 </div>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-5 h-5 text-slate-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 w-4 h-4 text-slate-400" />
                   <Input
                     id="password"
                     type="password"
@@ -318,7 +322,7 @@ export default function LoginPageV1() {
                     required
                     disabled={loading}
                     minLength={6}
-                    className="pl-11 h-11"
+                    className="pl-10 h-10"
                   />
                 </div>
                 {mode === 'signup' && (
@@ -330,7 +334,7 @@ export default function LoginPageV1() {
 
               <Button
                 type="submit"
-                className="w-full h-11 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-semibold"
+                className="w-full h-10 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-medium"
                 disabled={loading}
               >
                 {loading ? (
@@ -357,16 +361,16 @@ export default function LoginPageV1() {
                 </a>
               </p>
             )}
-          </CardContent>
-        </Card>
+          </div>
+        </div>
 
         {/* Footer Links */}
-        <div className="mt-8 text-center text-sm text-slate-500 dark:text-slate-400">
-          <a href="#" className="hover:text-slate-700 dark:hover:text-slate-300">Privacy Policy</a>
+        <div className="mt-6 text-center text-sm text-slate-500 dark:text-slate-400">
+          <a href="#" className="hover:text-slate-700 dark:hover:text-slate-300">Privacy</a>
           {' · '}
-          <a href="#" className="hover:text-slate-700 dark:hover:text-slate-300">Terms of Service</a>
+          <a href="#" className="hover:text-slate-700 dark:hover:text-slate-300">Terms</a>
           {' · '}
-          <a href="#" className="hover:text-slate-700 dark:hover:text-slate-300">Help Center</a>
+          <a href="#" className="hover:text-slate-700 dark:hover:text-slate-300">Help</a>
         </div>
       </div>
     </div>
