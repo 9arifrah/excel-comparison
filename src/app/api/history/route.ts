@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { db } from '@/lib/db'
 import { comparisons } from '@/lib/db/schema'
-import { desc, eq } from 'drizzle-orm'
+import { desc, eq, or } from 'drizzle-orm'
 import { createClient } from '@/lib/supabase/server'
+import { isSuperAdmin } from '@/lib/super-admin'
 
 export async function GET() {
   try {
@@ -18,7 +19,9 @@ export async function GET() {
     }
 
     const userId = session.user.id
+    const superAdmin = await isSuperAdmin()
 
+    // Super admins can see all comparisons, regular users only see their own
     const result = await db
       .select({
         id: comparisons.id,
@@ -32,10 +35,11 @@ export async function GET() {
         comparisonMethod: comparisons.comparisonMethod,
         fuzzyAlgorithm: comparisons.fuzzyAlgorithm,
         similarityThreshold: comparisons.similarityThreshold,
-        createdAt: comparisons.createdAt
+        createdAt: comparisons.createdAt,
+        userId: comparisons.userId
       })
       .from(comparisons)
-      .where(eq(comparisons.userId, userId))
+      .where(superAdmin ? undefined : eq(comparisons.userId, userId))
       .orderBy(desc(comparisons.createdAt))
 
     // Parse JSON columns

@@ -22,6 +22,20 @@
       "when": 1773854288079,
       "tag": "0002_giant_black_tarantula",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1773857892480,
+      "tag": "0003_hesitant_catseye",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1773857914757,
+      "tag": "0004_amazing_albert_cleary",
+      "breakpoints": true
     }
   ]
 }

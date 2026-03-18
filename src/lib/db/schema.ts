@@ -1,4 +1,4 @@
-import { pgTable, text, integer, timestamp, index } from 'drizzle-orm/pg-core'
+import { pgTable, text, integer, timestamp, index, uuid } from 'drizzle-orm/pg-core'
 
 export const comparisons = pgTable('comparisons', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
@@ -35,7 +35,22 @@ export const adminAssignments = pgTable('admin_assignments', {
   assignedToIndex: index('admin_assignments_assigned_to_idx').on(table.assignedTo),
 }))
 
+export const superAdmins = pgTable('super_admins', {
+  id: uuid('id').primaryKey().defaultRandom(),
+  userId: uuid('user_id').notNull(),
+  createdAt: timestamp('created_at').defaultNow().notNull(),
+}, (table) => ({
+  userIdIndex: index('super_admins_user_id_idx').on(table.userId),
+}))
+
 export type Comparison = typeof comparisons.$inferSelect
+export type NewComparison = typeof comparisons.$inferInsert
+
+export type AdminAssignment = typeof adminAssignments.$inferSelect
+export type NewAdminAssignment = typeof adminAssignments.$inferInsert
+
+export type SuperAdmin = typeof superAdmins.$inferSelect
+export type NewSuperAdmin = typeof superAdmins.$inferInsert
 export type NewComparison = typeof comparisons.$inferInsert
 
 export type AdminAssignment = typeof adminAssignments.$inferSelect

@@ -19,6 +19,8 @@ import {
 } from 'lucide-react'
 import { useRouter } from 'next/navigation'
 import { PAGE_THEMES, BUTTON_GRADIENTS, BACKGROUNDS, BORDERS, SPACING, SHADOWS, TYPOGRAPHY, COLORS, RADIUS } from '@/lib/constants/design-system'
+import { createClient } from '@/lib/supabase/client'
+import { Shield } from 'lucide-react'
 
 interface HistoryItem {
   id: string
@@ -31,6 +33,8 @@ interface HistoryItem {
   comparisonMethod: 'exact' | 'fuzzy'
   fuzzyAlgorithm?: 'jaro-winkler' | 'jaccard'
   similarityThreshold?: number
+  userId?: string
+}
 }
 
 export default function HistoryScreen() {
@@ -41,6 +45,8 @@ export default function HistoryScreen() {
   const [searchQuery, setSearchQuery] = useState('')
   const [sortBy, setSortBy] = useState<'date' | 'name' | 'matchRate'>('date')
   const [sortOrder, setSortOrder] = useState<'asc' | 'desc'>('desc')
+  const [isSuperAdmin, setIsSuperAdmin] = useState(false)
+  const [currentUserId, setCurrentUserId] = useState<string | null>(null)
 
   // Fetch history data from API
   useEffect(() => {
@@ -51,7 +57,7 @@ export default function HistoryScreen() {
           throw new Error('Failed to fetch history')
         }
         const data = await response.json()
-        
+
         // Transform API data to match HistoryItem interface
         const transformedData: HistoryItem[] = data.map((item: any) => ({
           id: item.id,
@@ -63,9 +69,19 @@ export default function HistoryScreen() {
           createdAt: item.createdAt,
           comparisonMethod: item.comparisonMethod,
           fuzzyAlgorithm: item.fuzzyAlgorithm,
-          similarityThreshold: item.similarityThreshold
+          similarityThreshold: item.similarityThreshold,
+          userId: item.userId
         }))
-        
+
+        // Check if user is super admin by seeing if they have data with different userIds
+        const { data: { user } } = await createClient().auth.getUser()
+        if (user) {
+          setCurrentUserId(user.id)
+          // If we see items with different userIds, this user must be a super admin
+          const hasOtherUsersData = transformedData.some(item => item.userId !== user.id)
+          setIsSuperAdmin(hasOtherUsersData)
+        }
+
         setHistory(transformedData)
       } catch (error) {
         console.error('Error fetching history:', error)
@@ -74,7 +90,7 @@ export default function HistoryScreen() {
         setIsLoading(false)
       }
     }
-    
+
     fetchHistory()
   }, [])
 
@@ -150,7 +166,7 @@ export default function HistoryScreen() {
         {/* Header */}
         <PageHeader
           title="Comparison History"
-          subtitle="View and manage your past comparisons"
+          subtitle={isSuperAdmin ? "View all comparisons across all users" : "View and manage your past comparisons"}
           icon={<FileSpreadsheet className="w-10 h-10 text-purple-600 dark:text-purple-400" />}
           themeGradient={PAGE_THEMES.history}
           showBackButton={true}
@@ -243,10 +259,16 @@ export default function HistoryScreen() {
                 <CardContent className="p-6">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1">
-                      <div className="flex items-center gap-2 mb-3">
+                      <div className="flex items-center gap-2 mb-3 flex-wrap">
                         <h3 className="font-bold text-lg bg-gradient-to-r from-slate-700 to-slate-600 dark:from-slate-300 dark:to-slate-400 bg-clip-text text-transparent">
                           {item.masterFile} vs {item.secondaryFile}
                         </h3>
+                        {isSuperAdmin && item.userId && item.userId !== currentUserId && (
+                          <Badge className="bg-amber-500 text-white flex items-center gap-1" variant="secondary">
+                            <Shield className="w-3 h-3" />
+                            Other User
+                          </Badge>
+                        )}
                         {item.comparisonMethod === 'fuzzy' && (
                           <Badge className="bg-purple-500 text-white">
                             Fuzzy ({item.fuzzyAlgorithm || 'jaro-winkler'}, {item.similarityThreshold || 85}%)
