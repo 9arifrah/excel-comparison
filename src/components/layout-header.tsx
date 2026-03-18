@@ -14,7 +14,7 @@ export function LayoutHeader() {
 
   return (
     <header className="sticky top-0 z-50 w-full border-b border-slate-200/50 dark:border-slate-800/50 bg-white/80 dark:bg-slate-950/80 backdrop-blur-xl supports-[backdrop-filter]:bg-white/60 dark:supports-[backdrop-filter]:bg-slate-950/60">
-      <div className="container flex h-16 items-center justify-between">
+      <div className="container mx-auto px-4 sm:px-6 lg:px-8 flex h-16 items-center justify-between">
         {/* Logo */}
         <div className="flex items-center gap-3">
           <div className="relative">
