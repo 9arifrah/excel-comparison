@@ -2,7 +2,7 @@ import type { Metadata } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
 import "./globals.css";
 import { Toaster } from "@/components/ui/toaster";
-import { UserMenu } from "@/components/user-menu";
+import { LayoutHeader } from "@/components/layout-header";
 
 const geistSans = Geist({
   variable: "--font-geist-sans",
@@ -47,15 +47,7 @@ export default function RootLayout({
       <body
         className={`${geistSans.variable} ${geistMono.variable} antialiased bg-background text-foreground`}
       >
-        {/* Add header with user menu */}
-        <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-          <div className="container flex h-14 items-center justify-between">
-            <div className="flex items-center gap-2">
-              <span className="font-bold text-lg">Excel Comparison</span>
-            </div>
-            <UserMenu />
-          </div>
-        </header>
+        <LayoutHeader />
         <main className="min-h-[calc(100vh-3.5rem)]">
           {children}
         </main>
