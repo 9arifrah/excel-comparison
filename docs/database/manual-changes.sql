@@ -3,7 +3,7 @@
 -- Location: https://app.supabase.com/project/YOUR-PROJECT-ID/sql/new
 
 -- Step 1: Create the database function for first-user detection
-CREATE OR REPLACE FUNCTION assign_comparisons_to_first_user()
+CREATE OR REPLACE FUNCTION public.assign_comparisons_to_first_user()
 RETURNS TRIGGER AS $$
 DECLARE
   existing_count INTEGER;
@@ -11,7 +11,7 @@ DECLARE
 BEGIN
   -- Check if there are any comparisons without user_id
   SELECT COUNT(*) INTO existing_count
-  FROM "comparisons"
+  FROM public."comparisons"
   WHERE "user_id" IS NULL;
 
   -- Only proceed if there are unassigned comparisons
@@ -21,7 +21,7 @@ BEGIN
 
     -- Double-check after acquiring lock
     SELECT COUNT(*) INTO existing_count
-    FROM "comparisons"
+    FROM public."comparisons"
     WHERE "user_id" IS NULL;
 
     IF existing_count > 0 THEN
@@ -29,18 +29,18 @@ BEGIN
       first_user_id := NEW.id;
 
       -- Update all existing comparisons
-      UPDATE "comparisons"
+      UPDATE public."comparisons"
       SET "user_id" = first_user_id
       WHERE "user_id" IS NULL;
 
       -- Record assignments in admin_assignments table
-      INSERT INTO "admin_assignments" ("id", "old_id", "assigned_to", "assigned_at")
+      INSERT INTO public."admin_assignments" ("id", "old_id", "assigned_to", "assigned_at")
       SELECT
         gen_random_uuid()::text,
         "id",
         first_user_id,
         now()
-      FROM "comparisons"
+      FROM public."comparisons"
       WHERE "user_id" = first_user_id;
     END IF;
   END IF;
