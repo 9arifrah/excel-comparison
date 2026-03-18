@@ -13,10 +13,12 @@ import { useRouter } from 'next/navigation'
 import { PAGE_THEMES, BUTTON_GRADIENTS, BACKGROUNDS, BORDERS, SPACING, SHADOWS, TYPOGRAPHY, COLORS, RADIUS } from '@/lib/constants/design-system'
 
 type ThresholdPreset = 'strict' | 'high' | 'medium' | 'low' | 'custom'
+type FuzzyAlgorithm = 'jaro-winkler' | 'jaccard'
 
 export default function SettingsScreen() {
   const router = useRouter()
   const [enableFuzzyMatching, setEnableFuzzyMatching] = useState(false)
+  const [fuzzyAlgorithm, setFuzzyAlgorithm] = useState<FuzzyAlgorithm>('jaro-winkler')
   const [similarityThreshold, setSimilarityThreshold] = useState(85)
   const [thresholdPreset, setThresholdPreset] = useState<ThresholdPreset>('high')
   const [isComparing, setIsComparing] = useState(false)
@@ -275,6 +277,118 @@ export default function SettingsScreen() {
                     <div className="flex items-center gap-2">
                       <div className="w-2 h-2 rounded-full bg-gradient-to-r from-red-500 to-orange-500" />
                       <span>Strict</span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Algorithm Selection */}
+                <div className="space-y-3 pt-4 border-t border-slate-200 dark:border-slate-700">
+                  <Label className="text-base font-semibold text-slate-700 dark:text-slate-300">
+                    Pilih Algoritma Fuzzy Matching
+                  </Label>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">
+                    Pilih algoritma yang sesuai dengan jenis data Anda
+                  </p>
+
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-4">
+                    {/* Jaro-Winkler Option */}
+                    <button
+                      type="button"
+                      onClick={() => setFuzzyAlgorithm('jaro-winkler')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        fuzzyAlgorithm === 'jaro-winkler'
+                          ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-md'
+                          : 'border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 hover:border-purple-300 dark:hover:border-purple-600'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          fuzzyAlgorithm === 'jaro-winkler'
+                            ? 'border-purple-500 bg-purple-500'
+                            : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                          {fuzzyAlgorithm === 'jaro-winkler' && (
+                            <div className="w-2 h-2 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Jaro-Winkler
+                          </h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                            Cocok untuk nama, kata pendek, dan data dengan typo kecil
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 dark:bg-blue-800/30 text-blue-700 dark:text-blue-300">
+                              Nama & Identitas
+                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-green-100 dark:bg-green-800/30 text-green-700 dark:text-green-300">
+                              Typo Kecil
+                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-purple-100 dark:bg-purple-800/30 text-purple-700 dark:text-purple-300">
+                              Character Level
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+
+                    {/* Jaccard Option */}
+                    <button
+                      type="button"
+                      onClick={() => setFuzzyAlgorithm('jaccard')}
+                      className={`p-4 rounded-xl border-2 text-left transition-all ${
+                        fuzzyAlgorithm === 'jaccard'
+                          ? 'border-purple-500 bg-purple-50 dark:bg-purple-900/20 shadow-md'
+                          : 'border-slate-200 dark:border-slate-700 bg-white/50 dark:bg-slate-800/50 hover:border-purple-300 dark:hover:border-purple-600'
+                      }`}
+                    >
+                      <div className="flex items-start gap-3">
+                        <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center flex-shrink-0 mt-0.5 ${
+                          fuzzyAlgorithm === 'jaccard'
+                            ? 'border-purple-500 bg-purple-500'
+                            : 'border-slate-300 dark:border-slate-600'
+                        }`}>
+                          {fuzzyAlgorithm === 'jaccard' && (
+                            <div className="w-2 h-2 rounded-full bg-white" />
+                          )}
+                        </div>
+                        <div className="flex-1">
+                          <h4 className="font-bold text-slate-700 dark:text-slate-300 mb-1">
+                            Jaccard
+                          </h4>
+                          <p className="text-xs text-slate-500 dark:text-slate-400 mb-2">
+                            Cocok untuk frasa, kalimat, dan variasi urutan kata
+                          </p>
+                          <div className="flex flex-wrap gap-1">
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-orange-100 dark:bg-orange-800/30 text-orange-700 dark:text-orange-300">
+                              Frasa & Kalimat
+                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-yellow-100 dark:bg-yellow-800/30 text-yellow-700 dark:text-yellow-300">
+                              Urutan Kata
+                            </span>
+                            <span className="text-xs px-2 py-0.5 rounded-full bg-pink-100 dark:bg-pink-800/30 text-pink-700 dark:text-pink-300">
+                              Word Level
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    </button>
+                  </div>
+
+                  {/* Algorithm Explanation Box */}
+                  <div className="bg-amber-50 dark:bg-amber-900/20 rounded-lg p-4 border border-amber-200 dark:border-amber-800 mt-3">
+                    <div className="flex items-start gap-3">
+                      <AlertCircle className="w-5 h-5 text-amber-600 dark:text-amber-400 flex-shrink-0 mt-0.5" />
+                      <div className="space-y-2">
+                        <p className="text-sm font-semibold text-slate-700 dark:text-slate-300">
+                          Tips Memilih Algoritma:
+                        </p>
+                        <ul className="text-xs text-slate-600 dark:text-slate-400 space-y-1">
+                          <li>• <strong>Jaro-Winkler:</strong> Gunakan untuk data nama, alamat, kode, atau teks pendek yang mungkin memiliki typo kecil</li>
+                          <li>• <strong>Jaccard:</strong> Gunakan untuk deskripsi produk, judul, atau teks panjang dengan urutan kata yang bervariasi</li>
+                        </ul>
+                      </div>
                     </div>
                   </div>
                 </div>
