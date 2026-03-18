@@ -2,6 +2,7 @@ import { pgTable, text, integer, timestamp, index } from 'drizzle-orm/pg-core'
 
 export const comparisons = pgTable('comparisons', {
   id: text('id').primaryKey().$defaultFn(() => crypto.randomUUID()),
+  userId: text('user_id'), // NEW: Nullable user ID field for authentication
   masterFile: text('master_file').notNull(),
   secondaryFile: text('secondary_file').notNull(),
   totalRows: integer('total_rows').notNull(),
@@ -19,10 +20,23 @@ export const comparisons = pgTable('comparisons', {
   updatedAt: timestamp('updated_at').defaultNow().notNull(),
 }, (table) => ({
   createdAtIndex: index('comparisons_created_at_idx').on(table.createdAt),
+  userIdIndex: index('comparisons_user_id_idx').on(table.userId), // NEW: User ID index
   masterFileIndex: index('comparisons_master_file_idx').on(table.masterFile),
   secondaryFileIndex: index('comparisons_secondary_file_idx').on(table.secondaryFile),
   comparisonMethodIndex: index('comparisons_comparison_method_idx').on(table.comparisonMethod),
 }))
 
+export const adminAssignments = pgTable('admin_assignments', {
+  id: text('id').primaryKey(),
+  oldId: text('old_id').notNull(),
+  assignedTo: text('assigned_to').notNull(),
+  assignedAt: timestamp('assigned_at').defaultNow().notNull(),
+}, (table) => ({
+  assignedToIndex: index('admin_assignments_assigned_to_idx').on(table.assignedTo),
+}))
+
 export type Comparison = typeof comparisons.$inferSelect
 export type NewComparison = typeof comparisons.$inferInsert
+
+export type AdminAssignment = typeof adminAssignments.$inferSelect
+export type NewAdminAssignment = typeof adminAssignments.$inferInsert
